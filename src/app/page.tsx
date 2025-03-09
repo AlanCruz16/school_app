@@ -4,9 +4,11 @@ import { createClient } from '@/lib/utils/supabase/server'
 
 export default async function RootPage() {
   const supabase = await createClient()
-  const { data: { session } } = await supabase.auth.getSession()
 
-  if (!session) {
+  // Use getUser() instead of getSession() for better security
+  const { data: { user }, error } = await supabase.auth.getUser()
+
+  if (!user) {
     redirect('/login')
   } else {
     redirect('/dashboard')

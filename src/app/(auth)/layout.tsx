@@ -10,9 +10,11 @@ export default async function AuthLayout({
     children: React.ReactNode
 }) {
     const supabase = await createClient()
-    const { data: { session } } = await supabase.auth.getSession()
 
-    if (!session) {
+    // Use getUser() instead of getSession() for better security
+    const { data: { user }, error } = await supabase.auth.getUser()
+
+    if (!user) {
         redirect('/login')
     }
 
@@ -20,7 +22,7 @@ export default async function AuthLayout({
         <div className="flex h-screen bg-background">
             <Sidebar />
             <div className="flex flex-col flex-1 overflow-hidden">
-                <Navbar user={session.user} />
+                <Navbar user={user} />
                 <main className="flex-1 overflow-y-auto p-4 md:p-6">
                     {children}
                 </main>
