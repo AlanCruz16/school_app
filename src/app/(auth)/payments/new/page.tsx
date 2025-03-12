@@ -20,15 +20,31 @@ export default async function NewPaymentPage({
         return null // Will be handled by middleware
     }
 
-    // Get the clerk information
-    const clerk = await prisma.user.findUnique({
+    // Get or create the clerk information
+    let clerk = await prisma.user.findUnique({
         where: { email: user.email || '' }
     })
 
+    if (!clerk && user.email) {
+        // Create a new clerk record for this authenticated user
+        clerk = await prisma.user.create({
+            data: {
+                name: user.email.split('@')[0], // Basic name from email
+                email: user.email,
+                role: 'clerk' // Default role
+            }
+        });
+    }
+
+    // Now we should have a clerk, but just in case
     if (!clerk) {
-        // This shouldn't happen since middleware ensures user is authenticated
-        // But we'll handle it anyway
-        return redirect('/login')
+        // Show a meaningful error instead of redirecting
+        return (
+            <div className="p-8">
+                <h1 className="text-xl font-bold mb-4">Account Setup Required</h1>
+                <p>Your user account isn't properly set up in the system. Please contact an administrator.</p>
+            </div>
+        )
     }
 
     // Get active school year
