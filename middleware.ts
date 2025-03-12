@@ -59,6 +59,12 @@ export async function middleware(request: NextRequest) {
     // Check if the route is protected
     const isAuthRoute = request.nextUrl.pathname.startsWith('/(auth)') ||
         request.nextUrl.pathname.startsWith('/dashboard') ||
+        request.nextUrl.pathname.startsWith('/students') ||
+        request.nextUrl.pathname.startsWith('/tutors') ||
+        request.nextUrl.pathname.startsWith('/payments') ||
+        request.nextUrl.pathname.startsWith('/calendar') ||
+        request.nextUrl.pathname.startsWith('/grades') ||
+        request.nextUrl.pathname.startsWith('/settings') ||
         request.nextUrl.pathname === '/'
 
     const isLoginPage = request.nextUrl.pathname === '/login'
