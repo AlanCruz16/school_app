@@ -18,6 +18,7 @@ import {
 import { formatCurrency, formatDate, formatMonth } from '@/lib/utils/format'
 import StudentPaymentHistory from '@/components/students/student-payment-history'
 import StudentPaymentCalendar from '@/components/students/student-payment-calendar'
+import BalanceAdjustment from '@/components/students/balance-adjustement'
 
 export default async function StudentDetailPage({
     params
@@ -95,14 +96,14 @@ export default async function StudentDetailPage({
                             <div className="flex items-center gap-2">
                                 <School className="h-4 w-4 text-muted-foreground" />
                                 <span>
-                                    {student.grade.name} ({student.grade.schoolYear.name})
+                                    {student.grade?.name} ({student.grade?.schoolYear?.name || "No school year"})
                                 </span>
                             </div>
                         </div>
                         <div className="grid gap-2">
                             <div className="text-sm font-medium">Tuition Fee</div>
                             <div>
-                                {formatCurrency(parseFloat(student.grade.tuitionAmount.toString()))} / month
+                                {formatCurrency(student.grade ? parseFloat(student.grade.tuitionAmount.toString()) : 0)} / month
                             </div>
                         </div>
                         <div className="grid gap-2">
@@ -112,6 +113,11 @@ export default async function StudentDetailPage({
                             </div>
                         </div>
                         <div className="flex justify-end gap-2 mt-4">
+                            <BalanceAdjustment
+                                studentId={student.id}
+                                studentName={student.name}
+                                currentBalance={parseFloat(student.balance.toString())}
+                            />
                             <Button variant="outline" asChild>
                                 <Link href={`/students/${student.id}/edit`}>
                                     <Pencil className="mr-2 h-4 w-4" />
@@ -137,31 +143,31 @@ export default async function StudentDetailPage({
                     <CardContent className="space-y-4">
                         <div className="grid gap-2">
                             <div className="text-sm font-medium">Name</div>
-                            <div className="font-medium">{student.tutor.name}</div>
+                            <div className="font-medium">{student.tutor?.name || "No tutor assigned"}</div>
                         </div>
                         <div className="grid gap-2">
                             <div className="text-sm font-medium">Contact</div>
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2">
                                     <Phone className="h-4 w-4 text-muted-foreground" />
-                                    <span>{student.tutor.phone}</span>
+                                    <span>{student.tutor?.phone || "N/A"}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Mail className="h-4 w-4 text-muted-foreground" />
-                                    <span>{student.tutor.email}</span>
+                                    <span>{student.tutor?.email || "N/A"}</span>
                                 </div>
                             </div>
                         </div>
                         <div className="grid gap-2">
                             <div className="text-sm font-medium">Address</div>
-                            <div>{student.tutor.address || 'No address provided'}</div>
+                            <div>{student.tutor?.address || 'No address provided'}</div>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Payment Calendar */}
-            {activeSchoolYear && (
+            {activeSchoolYear && student.grade && (
                 <Card>
                     <CardHeader>
                         <CardTitle>Payment Calendar ({activeSchoolYear.name})</CardTitle>
