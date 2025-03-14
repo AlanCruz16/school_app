@@ -1,11 +1,9 @@
 // src/app/(auth)/dashboard/page.tsx
-import Link from 'next/link'
-import { prisma } from '@/lib/db'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/utils/supabase/server'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { prisma } from '@/lib/db'
 import { formatCurrency } from '@/lib/utils/format'
-import OutstandingBalances from '@/components/dashboard/outstanding-balances'
+import PaymentSummary from '@/components/dashboard/payment-summary'
 
 export default async function DashboardPage() {
     const supabase = await createClient()
@@ -15,63 +13,64 @@ export default async function DashboardPage() {
         return null // Will be handled by middleware
     }
 
-    // Get statistics
-    const studentCount = await prisma.student.count({
-        where: { active: true }
-    })
-
-    // Calculate total outstanding balance
-    const students = await prisma.student.findMany({
-        where: { active: true },
-        select: {
-            id: true,
-            name: true,
-            active: true,
-            balance: true,
-            grade: {
-                select: {
-                    name: true
-                }
-            },
-            tutor: {
-                select: {
-                    name: true
-                }
-            }
-        }
-    })
-
-    const totalOutstanding = students.reduce(
-        (total, student) => total + parseFloat(student.balance.toString()),
-        0
-    )
-
-    // Get payments for current month
-    const now = new Date()
-    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-
-    const monthlyPayments = await prisma.payment.findMany({
-        where: {
-            paymentDate: {
-                gte: firstDayOfMonth,
-                lte: lastDayOfMonth
-            }
-        }
-    })
-
-    const totalMonthlyPayments = monthlyPayments.reduce(
-        (total, payment) => total + parseFloat(payment.amount.toString()),
-        0
-    )
-
     // Get active school year
     const activeSchoolYear = await prisma.schoolYear.findFirst({
         where: { active: true }
     })
 
-    // Get recent payments
+    // Get total students count
+    const totalStudents = await prisma.student.count({
+        where: { active: true }
+    })
+
+    // Calculate total outstanding balance
+    const totalOutstandingBalance = await prisma.student.aggregate({
+        _sum: {
+            balance: true
+        },
+        where: {
+            active: true
+        }
+    })
+
+    // Get current month
+    const currentMonth = new Date().getMonth() + 1
+
+    // Get all payments for the active school year (instead of just current month)
+    const allPayments = await prisma.payment.findMany({
+        where: {
+            schoolYearId: activeSchoolYear?.id
+        },
+        include: {
+            student: {
+                select: {
+                    name: true,
+                    grade: {
+                        select: {
+                            name: true
+                        }
+                    }
+                }
+            }
+        },
+        orderBy: {
+            paymentDate: 'desc'
+        }
+    })
+
+    // Calculate total payments for current month
+    const currentMonthPayments = allPayments.filter(payment => payment.forMonth === currentMonth)
+    const totalMonthlyPayments = currentMonthPayments.reduce((sum, payment) => {
+        // Handle Prisma Decimal type safely
+        return sum + parseFloat(payment.amount.toString())
+    }, 0)
+
+    // Get recent payments (across all months)
     const recentPayments = await prisma.payment.findMany({
+        take: 10,
+        orderBy: {
+            paymentDate: 'desc'
+        },
         include: {
             student: {
                 select: {
@@ -84,11 +83,24 @@ export default async function DashboardPage() {
                 }
             },
             schoolYear: true
+        }
+    })
+
+    // Get students with outstanding balances
+    const studentsWithBalance = await prisma.student.findMany({
+        where: {
+            active: true,
+            balance: {
+                gt: 0
+            }
         },
         orderBy: {
-            paymentDate: 'desc'
+            balance: 'desc'
         },
-        take: 5
+        take: 10,
+        include: {
+            grade: true
+        }
     })
 
     return (
@@ -108,9 +120,10 @@ export default async function DashboardPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{studentCount}</div>
+                        <div className="text-2xl font-bold">{totalStudents}</div>
                     </CardContent>
                 </Card>
+
                 <Card>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">
@@ -118,9 +131,12 @@ export default async function DashboardPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-destructive">{formatCurrency(totalOutstanding)}</div>
+                        <div className="text-2xl font-bold text-destructive">
+                            {formatCurrency(Number(totalOutstandingBalance._sum.balance || 0))}
+                        </div>
                     </CardContent>
                 </Card>
+
                 <Card>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">
@@ -128,9 +144,12 @@ export default async function DashboardPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{formatCurrency(totalMonthlyPayments)}</div>
+                        <div className="text-2xl font-bold">
+                            {formatCurrency(totalMonthlyPayments)}
+                        </div>
                     </CardContent>
                 </Card>
+
                 <Card>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">
@@ -138,50 +157,50 @@ export default async function DashboardPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{activeSchoolYear?.name || "None"}</div>
+                        <div className="text-2xl font-bold">
+                            {activeSchoolYear?.name || "None"}
+                        </div>
                     </CardContent>
                 </Card>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
+                <PaymentSummary
+                    payments={allPayments}
+                    totalStudents={totalStudents}
+                    currentMonth={currentMonth}
+                />
+
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle>Recent Payments</CardTitle>
-                        <Button variant="outline" size="sm" asChild>
-                            <Link href="/payments">View All</Link>
-                        </Button>
+                    <CardHeader>
+                        <CardTitle>Outstanding Payments</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {recentPayments.length === 0 ? (
+                        {studentsWithBalance.length === 0 ? (
                             <p className="text-sm text-muted-foreground">
-                                No recent payments to display.
+                                No outstanding payments to display.
                             </p>
                         ) : (
                             <div className="space-y-4">
-                                {recentPayments.map((payment) => (
-                                    <div key={payment.id} className="flex items-center justify-between">
+                                {studentsWithBalance.map(student => (
+                                    <div key={student.id} className="flex items-center justify-between border-b pb-2">
                                         <div>
-                                            <p className="font-medium">{payment.student.name}</p>
-                                            <p className="text-sm text-muted-foreground">
-                                                {payment.student.grade?.name || "No grade"} - {new Date(payment.paymentDate).toLocaleDateString()}
-                                            </p>
+                                            <div className="font-medium">
+                                                <a href={`/students/${student.id}`} className="hover:underline">
+                                                    {student.name}
+                                                </a>
+                                            </div>
+                                            <div className="text-sm text-muted-foreground">
+                                                {student.grade.name}
+                                            </div>
                                         </div>
-                                        <div className="font-medium">{formatCurrency(parseFloat(payment.amount.toString()))}</div>
+                                        <div className="font-semibold text-destructive">
+                                            {formatCurrency(Number(student.balance))}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
                         )}
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle>Outstanding Payments</CardTitle>
-                        <Button variant="outline" size="sm" asChild>
-                            <Link href="/reports/outstanding-balances">View All</Link>
-                        </Button>
-                    </CardHeader>
-                    <CardContent>
-                        <OutstandingBalances students={students} limit={5} />
                     </CardContent>
                 </Card>
             </div>

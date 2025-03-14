@@ -167,7 +167,7 @@ export default async function StudentDetailPage({
             </div>
 
             {/* Payment Calendar */}
-            {activeSchoolYear && student.grade && (
+            {activeSchoolYear && (
                 <Card>
                     <CardHeader>
                         <CardTitle>Payment Calendar ({activeSchoolYear.name})</CardTitle>
@@ -180,6 +180,7 @@ export default async function StudentDetailPage({
                             payments={student.payments}
                             schoolYearId={activeSchoolYear.id}
                             monthlyFee={parseFloat(student.grade.tuitionAmount.toString())}
+                            studentId={student.id}
                         />
                     </CardContent>
                 </Card>
