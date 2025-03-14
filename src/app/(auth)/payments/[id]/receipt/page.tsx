@@ -1,20 +1,18 @@
 // src/app/(auth)/payments/[id]/receipt/page.tsx
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 import { prisma } from '@/lib/db'
 import { createClient } from '@/lib/utils/supabase/server'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { formatCurrency, formatDate, formatMonth } from '@/lib/utils/format'
-import PaymentReceipt from '@/components/payments/payment-receipt'
+import { ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
+import Receipt from '@/components/payments/receipt'
 import PrintButton from '@/components/payments/print-button'
 
-export default async function PaymentReceiptPage({
-    params
-}: {
+interface ReceiptPageProps {
     params: { id: string }
-}) {
+}
+
+export default async function ReceiptPage({ params }: ReceiptPageProps) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -22,7 +20,7 @@ export default async function PaymentReceiptPage({
         return null // Will be handled by middleware
     }
 
-    // Fetch the payment with related data
+    // Fetch the payment with detailed information
     const payment = await prisma.payment.findUnique({
         where: { id: params.id },
         include: {
@@ -51,25 +49,21 @@ export default async function PaymentReceiptPage({
                             <span className="sr-only">Back to payments</span>
                         </Link>
                     </Button>
-                    <h1 className="text-3xl font-bold">Payment Receipt</h1>
+                    <h1 className="text-3xl font-bold">Receipt #{payment.receiptNumber}</h1>
                 </div>
-                <PrintButton />
+
+                {/* <div className="print:hidden">
+                    <PrintButton />
+                </div> */}
             </div>
 
-            <Card className="max-w-2xl mx-auto">
-                <CardHeader className="text-center">
-                    <CardTitle>PAYMENT RECEIPT</CardTitle>
-                    <CardDescription>
-                        Receipt #{payment.receiptNumber}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <PaymentReceipt payment={payment} />
-                </CardContent>
-                <CardFooter className="flex justify-center border-t pt-4 text-xs text-muted-foreground">
-                    <p>Thank you for your payment.</p>
-                </CardFooter>
-            </Card>
+            <Receipt
+                payment={payment}
+                schoolName="School Payment System"
+                schoolAddress="123 Education Lane, Schooltown"
+                schoolPhone="(123) 456-7890"
+                schoolEmail="admin@school.edu"
+            />
         </div>
     )
 }

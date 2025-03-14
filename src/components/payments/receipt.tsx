@@ -1,0 +1,301 @@
+// src/components/payments/receipt.tsx
+'use client'
+
+import React, { useRef } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { formatCurrency, formatDate, formatMonth } from '@/lib/utils/format'
+import { Printer } from 'lucide-react'
+import AutoPrintReceipt from './auto-print-receipt'
+
+interface PaymentDetails {
+    id: string
+    receiptNumber: string
+    amount: any
+    paymentDate: string | Date
+    paymentMethod: string
+    forMonth: number
+    isPartial: boolean
+    notes?: string | null
+    student: {
+        name: string
+        grade: {
+            name: string
+            tuitionAmount: any
+        }
+    }
+    schoolYear: {
+        name: string
+    }
+    clerk: {
+        name: string
+    }
+}
+
+interface ReceiptProps {
+    payment: PaymentDetails
+    schoolName?: string
+    schoolLogo?: string
+    schoolAddress?: string
+    schoolPhone?: string
+    schoolEmail?: string
+}
+
+const Receipt = ({
+    payment,
+    schoolName = "School Payment System",
+    schoolLogo = "/logo.png",
+    schoolAddress = "123 Education Lane, Schooltown",
+    schoolPhone = "(123) 456-7890",
+    schoolEmail = "admin@school.edu"
+}: ReceiptProps) => {
+    const receiptRef = useRef<HTMLDivElement>(null)
+
+    const printReceipt = () => {
+        const printWindow = window.open('', '', 'width=800,height=600')
+        if (!printWindow) return
+
+        const content = receiptRef.current?.innerHTML || ''
+
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Payment Receipt #${payment.receiptNumber}</title>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <style>
+                    /* Base styling */
+                    body {
+                        font-family: Arial, sans-serif;
+                        line-height: 1.5;
+                        margin: 0;
+                        padding: 0;
+                        background: white;
+                        color: black;
+                    }
+                    
+                    /* Receipt container */
+                    .receipt {
+                        width: 80mm; /* Standard receipt width */
+                        max-width: 100%;
+                        margin: 0 auto;
+                        padding: 10px;
+                        box-sizing: border-box;
+                    }
+                    
+                    /* Receipt header */
+                    .receipt-header {
+                        text-align: center;
+                        margin-bottom: 10px;
+                    }
+                    
+                    .receipt-header h1 {
+                        font-size: 16px;
+                        font-weight: bold;
+                        margin: 5px 0;
+                    }
+                    
+                    .receipt-header p {
+                        font-size: 12px;
+                        margin: 2px 0;
+                    }
+                    
+                    /* Receipt body */
+                    .receipt-title {
+                        text-align: center;
+                        font-weight: bold;
+                        margin: 10px 0;
+                        font-size: 14px;
+                        text-transform: uppercase;
+                        border-top: 1px dashed #000;
+                        border-bottom: 1px dashed #000;
+                        padding: 5px 0;
+                    }
+                    
+                    .receipt-info {
+                        font-size: 12px;
+                    }
+                    
+                    .receipt-info div {
+                        display: flex;
+                        justify-content: space-between;
+                        margin: 4px 0;
+                    }
+                    
+                    .receipt-info .label {
+                        font-weight: bold;
+                    }
+                    
+                    /* Receipt total */
+                    .receipt-total {
+                        margin-top: 10px;
+                        padding: 5px 0;
+                        border-top: 1px dashed #000;
+                        font-weight: bold;
+                        font-size: 14px;
+                        display: flex;
+                        justify-content: space-between;
+                    }
+                    
+                    /* Receipt footer */
+                    .receipt-footer {
+                        margin-top: 10px;
+                        text-align: center;
+                        font-size: 12px;
+                        border-top: 1px dashed #000;
+                        padding-top: 10px;
+                    }
+                    
+                    /* Print button - hide when printing */
+                    @media print {
+                        .no-print {
+                            display: none !important;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="receipt">
+                    ${content}
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(function() {
+                            window.close();
+                        }, 500);
+                    };
+                </script>
+            </body>
+            </html>
+        `)
+
+        printWindow.document.close()
+    }
+
+    // Format payment data
+    const paymentAmount = typeof payment.amount === 'object' ?
+        parseFloat(payment.amount.toString()) :
+        (typeof payment.amount === 'string' ?
+            parseFloat(payment.amount) :
+            payment.amount)
+
+    const tuitionAmount = typeof payment.student.grade.tuitionAmount === 'object' ?
+        parseFloat(payment.student.grade.tuitionAmount.toString()) :
+        (typeof payment.student.grade.tuitionAmount === 'string' ?
+            parseFloat(payment.student.grade.tuitionAmount) :
+            payment.student.grade.tuitionAmount)
+
+    const balanceRemaining = payment.isPartial ? tuitionAmount - paymentAmount : 0
+
+    return (
+        <div>
+            <AutoPrintReceipt printFunction={printReceipt} />
+
+            <div className="print:hidden mb-4 flex justify-between">
+                <h1 className="text-xl font-bold">Receipt #{payment.receiptNumber}</h1>
+                <Button variant="outline" onClick={printReceipt}>
+                    <Printer className="mr-2 h-4 w-4" />
+                    Print Receipt
+                </Button>
+            </div>
+
+            <Card className="p-6 max-w-[80mm] mx-auto border bg-white receipt-container">
+                <div ref={receiptRef}>
+                    {/* Receipt Header */}
+                    <div className="receipt-header">
+                        {schoolLogo && (
+                            <div className="flex justify-center mb-2">
+                                <img
+                                    src={schoolLogo}
+                                    alt={schoolName}
+                                    className="h-12 print:h-10"
+                                />
+                            </div>
+                        )}
+                        <h1>{schoolName}</h1>
+                        <p className="text-sm">{schoolAddress}</p>
+                        <p className="text-sm">{schoolPhone}</p>
+                        <p className="text-sm">{schoolEmail}</p>
+                    </div>
+
+                    {/* Receipt Title */}
+                    <div className="receipt-title border-t border-b border-dashed py-1 my-3 text-center font-bold uppercase text-sm">
+                        Payment Receipt
+                    </div>
+
+                    {/* Receipt Info */}
+                    <div className="receipt-info space-y-1 text-sm">
+                        <div>
+                            <span className="label">Receipt #:</span>
+                            <span>{payment.receiptNumber}</span>
+                        </div>
+                        <div>
+                            <span className="label">Date:</span>
+                            <span>{formatDate(payment.paymentDate)}</span>
+                        </div>
+                        <div>
+                            <span className="label">Student:</span>
+                            <span>{payment.student.name}</span>
+                        </div>
+                        <div>
+                            <span className="label">Grade:</span>
+                            <span>{payment.student.grade.name}</span>
+                        </div>
+                        <div>
+                            <span className="label">School Year:</span>
+                            <span>{payment.schoolYear.name}</span>
+                        </div>
+                        <div>
+                            <span className="label">Month:</span>
+                            <span>{formatMonth(payment.forMonth)}</span>
+                        </div>
+                        <div>
+                            <span className="label">Payment Method:</span>
+                            <span>{payment.paymentMethod}</span>
+                        </div>
+                        <div>
+                            <span className="label">Payment Type:</span>
+                            <span>{payment.isPartial ? 'Partial Payment' : 'Full Payment'}</span>
+                        </div>
+
+                        {payment.isPartial && (
+                            <>
+                                <div>
+                                    <span className="label">Monthly Fee:</span>
+                                    <span>{formatCurrency(tuitionAmount)}</span>
+                                </div>
+                                <div>
+                                    <span className="label">Balance Remaining:</span>
+                                    <span>{formatCurrency(balanceRemaining)}</span>
+                                </div>
+                            </>
+                        )}
+
+                        {payment.notes && (
+                            <div>
+                                <span className="label">Notes:</span>
+                                <span>{payment.notes}</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Receipt Total */}
+                    <div className="receipt-total border-t border-dashed pt-2 mt-3 font-bold">
+                        <span>TOTAL PAID:</span>
+                        <span>{formatCurrency(paymentAmount)}</span>
+                    </div>
+
+                    {/* Receipt Footer */}
+                    <div className="receipt-footer border-t border-dashed pt-2 mt-3 text-center text-sm">
+                        <p>Processed by: {payment.clerk.name}</p>
+                        <p>Thank you!</p>
+                    </div>
+                </div>
+            </Card>
+        </div>
+    )
+}
+
+export default Receipt

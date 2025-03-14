@@ -38,6 +38,7 @@
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -72,7 +73,82 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+
+/* Print Styles */
+@media print {
+
+  /* Hide all UI elements except the receipt */
+  body * {
+    visibility: hidden;
+  }
+
+  .receipt-container,
+  .receipt-container * {
+    visibility: visible;
+  }
+
+  .receipt-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+    /* Standard receipt printer width */
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Hide all navigation and UI elements */
+  header,
+  nav,
+  footer,
+  .sidebar,
+  .navbar,
+  button {
+    display: none !important;
+  }
+
+  /* Remove backgrounds and borders for better printing */
+  .receipt-container {
+    border: none !important;
+    box-shadow: none !important;
+    background: white !important;
+  }
+
+  /* Adjust font sizes for better printing */
+  .receipt-container {
+    font-size: 10pt !important;
+  }
+
+  .receipt-container h1 {
+    font-size: 12pt !important;
+  }
+
+  .receipt-container h2,
+  .receipt-title {
+    font-size: 11pt !important;
+  }
+
+  /* Ensure no page breaks within receipt items */
+  .receipt-info,
+  .receipt-total,
+  .receipt-footer {
+    page-break-inside: avoid;
+  }
+
+  /* Remove all hover/focus styles */
+  * {
+    transition: none !important;
+  }
+
+  /* Force showing background colors and images when printing */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }

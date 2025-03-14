@@ -1,5 +1,7 @@
+// src/components/students/student-payment-history.tsx
 'use client'
 
+import Link from 'next/link'
 import {
     Table,
     TableBody,
@@ -10,6 +12,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatDate, formatMonth } from '@/lib/utils/format'
+import PaymentActionButtons from '@/components/payments/payment-action-buttons'
 
 interface Payment {
     id: string
@@ -55,6 +58,7 @@ export default function StudentPaymentHistory({ payments }: StudentPaymentHistor
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">Amount</TableHead>
                             <TableHead>Processed By</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -78,6 +82,9 @@ export default function StudentPaymentHistory({ payments }: StudentPaymentHistor
                                     {formatCurrency(parseFloat(payment.amount.toString()))}
                                 </TableCell>
                                 <TableCell>{payment.clerk.name}</TableCell>
+                                <TableCell>
+                                    <PaymentActionButtons paymentId={payment.id} />
+                                </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>

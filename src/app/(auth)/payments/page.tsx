@@ -15,9 +15,10 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatDate, formatMonth } from '@/lib/utils/format'
-import { PlusCircle, Printer, Eye } from 'lucide-react'
+import { PlusCircle } from 'lucide-react'
 import PaymentsListSkeleton from '@/components/skeletons/payments-list-skeleton'
 import { SuspenseWrapper } from '@/lib/utils/suspense-wrapper'
+import PaymentActionButtons from '@/components/payments/payment-action-buttons'
 import PaymentFilters from '@/components/payments/payment-filters'
 
 // This component fetches and displays the actual payments list
@@ -193,18 +194,7 @@ async function PaymentsContent({
                                                 {formatCurrency(parseFloat(payment.amount.toString()))}
                                             </TableCell>
                                             <TableCell>
-                                                <div className="flex justify-end gap-2">
-                                                    <Button variant="outline" size="icon">
-                                                        <Printer className="h-4 w-4" />
-                                                        <span className="sr-only">Print Receipt</span>
-                                                    </Button>
-                                                    <Button variant="outline" size="icon" asChild>
-                                                        <Link href={`/payments/${payment.id}`}>
-                                                            <Eye className="h-4 w-4" />
-                                                            <span className="sr-only">View Details</span>
-                                                        </Link>
-                                                    </Button>
-                                                </div>
+                                                <PaymentActionButtons paymentId={payment.id} />
                                             </TableCell>
                                         </TableRow>
                                     ))
