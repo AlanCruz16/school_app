@@ -15,64 +15,22 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatDate, formatMonth } from '@/lib/utils/format'
-import { CreditCard, Eye, PlusCircle, Printer, Search } from 'lucide-react'
-import PaymentsListSkeleton from '@/components/skeletons/payment-list-skeleton'
+import { PlusCircle, Printer, Eye } from 'lucide-react'
+import PaymentsListSkeleton from '@/components/skeletons/payments-list-skeleton'
 import { SuspenseWrapper } from '@/lib/utils/suspense-wrapper'
-
-// Payment filters component
-function PaymentFilters() {
-    return (
-        <Card>
-            <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="relative">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <input
-                            type="text"
-                            placeholder="Search receipts..."
-                            className="w-full rounded-md border border-input pl-8 pr-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground"
-                        />
-                    </div>
-
-                    <div>
-                        <select className="w-full rounded-md border border-input px-3 py-2 text-sm shadow-sm">
-                            <option value="">All Students</option>
-                            {/* Student options would be populated here */}
-                        </select>
-                    </div>
-
-                    <div>
-                        <select className="w-full rounded-md border border-input px-3 py-2 text-sm shadow-sm">
-                            <option value="">All Months</option>
-                            <option value="1">January</option>
-                            <option value="2">February</option>
-                            <option value="3">March</option>
-                            <option value="4">April</option>
-                            <option value="5">May</option>
-                            <option value="6">June</option>
-                            <option value="7">July</option>
-                            <option value="8">August</option>
-                            <option value="9">September</option>
-                            <option value="10">October</option>
-                            <option value="11">November</option>
-                            <option value="12">December</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <select className="w-full rounded-md border border-input px-3 py-2 text-sm shadow-sm">
-                            <option value="">All School Years</option>
-                            {/* School year options would be populated here */}
-                        </select>
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-    )
-}
+import PaymentFilters from '@/components/payments/payment-filters'
 
 // This component fetches and displays the actual payments list
-async function PaymentsContent() {
+async function PaymentsContent({
+    searchParams
+}: {
+    searchParams: {
+        query?: string;
+        studentId?: string;
+        month?: string;
+        schoolYearId?: string;
+    }
+}) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -80,12 +38,72 @@ async function PaymentsContent() {
         return null // Will be handled by middleware
     }
 
-    // Fetch recent payments
+    // Get active students for the filter
+    const students = await prisma.student.findMany({
+        where: {
+            active: true
+        },
+        select: {
+            id: true,
+            name: true
+        },
+        orderBy: {
+            name: 'asc'
+        }
+    })
+
+    // Get school years for the filter
+    const schoolYears = await prisma.schoolYear.findMany({
+        orderBy: {
+            startDate: 'desc'
+        }
+    })
+
+    // Build query filters
+    const filters: any = {}
+
+    // Text search filter (receipt number or student name)
+    if (searchParams.query) {
+        filters.OR = [
+            {
+                receiptNumber: {
+                    contains: searchParams.query,
+                    mode: 'insensitive'
+                }
+            },
+            {
+                student: {
+                    name: {
+                        contains: searchParams.query,
+                        mode: 'insensitive'
+                    }
+                }
+            }
+        ]
+    }
+
+    // Student filter
+    if (searchParams.studentId && searchParams.studentId !== 'all_students') {
+        filters.studentId = searchParams.studentId
+    }
+
+    // Month filter
+    if (searchParams.month && searchParams.month !== 'all_months') {
+        filters.forMonth = parseInt(searchParams.month)
+    }
+
+    // School year filter
+    if (searchParams.schoolYearId && searchParams.schoolYearId !== 'all_years') {
+        filters.schoolYearId = searchParams.schoolYearId
+    }
+
+    // Fetch payments with filters
     const payments = await prisma.payment.findMany({
-        take: 50, // Limit to 50 most recent payments
+        where: filters,
         orderBy: {
             paymentDate: 'desc'
         },
+        take: 50, // Limit to 50 payments at a time
         include: {
             student: {
                 select: {
@@ -119,7 +137,10 @@ async function PaymentsContent() {
                 </Button>
             </div>
 
-            <PaymentFilters />
+            <PaymentFilters
+                students={students}
+                schoolYears={schoolYears}
+            />
 
             <Card>
                 <CardContent className="p-0">
@@ -197,11 +218,20 @@ async function PaymentsContent() {
     )
 }
 
-export default function PaymentsPage() {
+export default function PaymentsPage({
+    searchParams
+}: {
+    searchParams: {
+        query?: string;
+        studentId?: string;
+        month?: string;
+        schoolYearId?: string;
+    }
+}) {
     return (
         <Suspense fallback={<PaymentsListSkeleton />}>
             <SuspenseWrapper>
-                <PaymentsContent />
+                <PaymentsContent searchParams={searchParams} />
             </SuspenseWrapper>
         </Suspense>
     )

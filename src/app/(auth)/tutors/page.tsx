@@ -1,13 +1,17 @@
 // src/app/(auth)/tutors/page.tsx
+import { Suspense } from 'react'
 import { createClient } from '@/lib/utils/supabase/server'
 import { prisma } from '@/lib/db'
 import { Button } from '@/components/ui/button'
 import TutorsList from '@/components/tutors/tutors-list'
 import TutorSearch from '@/components/tutors/tutor-search'
+import TutorsListSkeleton from '@/components/skeletons/tutors-list-skeleton'
+import { SuspenseWrapper } from '@/lib/utils/suspense-wrapper'
 import Link from 'next/link'
 import { PlusCircle } from 'lucide-react'
 
-export default async function TutorsPage({
+// This component fetches and displays the actual tutors list
+async function TutorsContent({
     searchParams
 }: {
     searchParams: { query?: string }
@@ -67,5 +71,19 @@ export default async function TutorsPage({
 
             <TutorsList tutors={tutors} />
         </div>
+    )
+}
+
+export default function TutorsPage({
+    searchParams
+}: {
+    searchParams: { query?: string }
+}) {
+    return (
+        <Suspense fallback={<TutorsListSkeleton />}>
+            <SuspenseWrapper>
+                <TutorsContent searchParams={searchParams} />
+            </SuspenseWrapper>
+        </Suspense>
     )
 }

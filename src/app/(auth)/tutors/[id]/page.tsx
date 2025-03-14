@@ -1,4 +1,5 @@
 // src/app/(auth)/tutors/[id]/page.tsx
+import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
@@ -17,8 +18,11 @@ import {
 } from 'lucide-react'
 import TutorStudentsList from '@/components/tutors/tutor-students-list'
 import DeleteTutorButton from '@/components/tutors/delete-tutor-button'
+import TutorDetailSkeleton from '@/components/skeletons/tutor-detail-skeleton'
+import { SuspenseWrapper } from '@/lib/utils/suspense-wrapper'
 
-export default async function TutorDetailPage({
+// This component fetches and displays the actual tutor details
+async function TutorDetailContent({
     params
 }: {
     params: { id: string }
@@ -167,5 +171,19 @@ export default async function TutorDetailPage({
                 </CardContent>
             </Card>
         </div>
+    )
+}
+
+export default function TutorDetailPage({
+    params
+}: {
+    params: { id: string }
+}) {
+    return (
+        <Suspense fallback={<TutorDetailSkeleton />}>
+            <SuspenseWrapper>
+                <TutorDetailContent params={params} />
+            </SuspenseWrapper>
+        </Suspense>
     )
 }
