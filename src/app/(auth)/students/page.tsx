@@ -1,13 +1,16 @@
 // src/app/(auth)/students/page.tsx
+import { Suspense } from 'react'
 import { createClient } from '@/lib/utils/supabase/server'
 import { prisma } from '@/lib/db'
 import { Button } from '@/components/ui/button'
 import StudentsList from '@/components/students/students-list'
 import StudentFilters from '@/components/students/student-filters'
+import StudentListSkeleton from '@/components/skeletons/student-list-skeleton'
 import Link from 'next/link'
 import { PlusCircle } from 'lucide-react'
 
-export default async function StudentsPage({
+// This component fetches and displays the actual student list content
+async function StudentsContent({
     searchParams
 }: {
     searchParams: { query?: string; gradeId?: string; active?: string }
@@ -95,5 +98,17 @@ export default async function StudentsPage({
 
             <StudentsList students={students} />
         </div>
+    )
+}
+
+export default function StudentsPage({
+    searchParams
+}: {
+    searchParams: { query?: string; gradeId?: string; active?: string }
+}) {
+    return (
+        <Suspense fallback={<StudentListSkeleton />}>
+            <StudentsContent searchParams={searchParams} />
+        </Suspense>
     )
 }

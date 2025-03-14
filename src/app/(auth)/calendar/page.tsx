@@ -1,9 +1,12 @@
 // src/app/(auth)/calendar/page.tsx
+import { Suspense } from 'react'
 import { prisma } from '@/lib/db'
 import { createClient } from '@/lib/utils/supabase/server'
 import PaymentCalendar from '@/components/calendar/payment-calendar'
+import CalendarPageSkeleton from '@/components/skeletons/calendar-page-skeleton'
 
-export default async function CalendarPage() {
+// This component fetches and displays the actual calendar data
+async function CalendarContent() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -80,5 +83,13 @@ export default async function CalendarPage() {
                 currentSchoolYearId={activeSchoolYear.id}
             />
         </div>
+    )
+}
+
+export default function CalendarPage() {
+    return (
+        <Suspense fallback={<CalendarPageSkeleton />}>
+            <CalendarContent />
+        </Suspense>
     )
 }

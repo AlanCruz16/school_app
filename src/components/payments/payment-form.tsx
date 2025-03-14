@@ -48,13 +48,15 @@ interface PaymentFormProps {
         id: string
         name: string
     }
+    initialMonth?: number // Add this prop
 }
 
 export default function PaymentForm({
     student,
     clerkId,
     clerkName,
-    activeSchoolYear
+    activeSchoolYear,
+    initialMonth
 }: PaymentFormProps) {
     const router = useRouter()
     const { toast } = useToast()
@@ -98,7 +100,7 @@ export default function PaymentForm({
 
     // Form state
     const [paymentMethod, setPaymentMethod] = useState('CASH')
-    const [month, setMonth] = useState('')
+    const [month, setMonth] = useState(initialMonth ? initialMonth.toString() : '')
     const [isPartial, setIsPartial] = useState(false)
     const [amount, setAmount] = useState(monthlyFee.toString())
     const [notes, setNotes] = useState('')

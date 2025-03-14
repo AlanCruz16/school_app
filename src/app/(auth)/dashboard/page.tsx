@@ -1,11 +1,14 @@
 // src/app/(auth)/dashboard/page.tsx
+import { Suspense } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/utils/supabase/server'
 import { prisma } from '@/lib/db'
 import { formatCurrency } from '@/lib/utils/format'
 import PaymentSummary from '@/components/dashboard/payment-summary'
+import DashboardSkeleton from '@/components/skeletons/dashboard-skeleton'
 
-export default async function DashboardPage() {
+// This component fetches and displays the actual dashboard content
+async function DashboardContent() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -64,27 +67,6 @@ export default async function DashboardPage() {
         // Handle Prisma Decimal type safely
         return sum + parseFloat(payment.amount.toString())
     }, 0)
-
-    // Get recent payments (across all months)
-    const recentPayments = await prisma.payment.findMany({
-        take: 10,
-        orderBy: {
-            paymentDate: 'desc'
-        },
-        include: {
-            student: {
-                select: {
-                    name: true,
-                    grade: {
-                        select: {
-                            name: true
-                        }
-                    }
-                }
-            },
-            schoolYear: true
-        }
-    })
 
     // Get students with outstanding balances
     const studentsWithBalance = await prisma.student.findMany({
@@ -205,5 +187,13 @@ export default async function DashboardPage() {
                 </Card>
             </div>
         </div>
+    )
+}
+
+export default function DashboardPage() {
+    return (
+        <Suspense fallback={<DashboardSkeleton />}>
+            <DashboardContent />
+        </Suspense>
     )
 }
