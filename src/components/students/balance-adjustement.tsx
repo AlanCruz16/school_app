@@ -1,3 +1,4 @@
+// src/components/students/balance-adjustement.tsx
 'use client'
 
 import { useState } from 'react'
@@ -24,12 +25,14 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/components/ui/use-toast'
 import { formatCurrency } from '@/lib/utils/format'
-import { PlusCircle, MinusCircle } from 'lucide-react'
+import { PlusCircle, MinusCircle, RefreshCw } from 'lucide-react'
 
 interface BalanceAdjustmentProps {
     studentId: string
     studentName: string
     currentBalance: number
+    expectedBalance?: number  // Added prop for expected balance
+    onSyncBalance?: () => void  // Optional callback for syncing
 }
 
 type AdjustmentType = 'increase' | 'decrease'
@@ -37,10 +40,13 @@ type AdjustmentType = 'increase' | 'decrease'
 export default function BalanceAdjustment({
     studentId,
     studentName,
-    currentBalance
+    currentBalance,
+    expectedBalance,
+    onSyncBalance
 }: BalanceAdjustmentProps) {
     const [open, setOpen] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isSyncing, setIsSyncing] = useState(false)
     const [amount, setAmount] = useState('')
     const [reason, setReason] = useState('')
     const [adjustmentType, setAdjustmentType] = useState<AdjustmentType>('increase')
@@ -105,6 +111,50 @@ export default function BalanceAdjustment({
         }
     }
 
+    // New function to handle syncing balance to expected amount
+    const handleSyncToExpected = async () => {
+        if (!expectedBalance || expectedBalance <= currentBalance) return;
+
+        setIsSyncing(true);
+
+        try {
+            // Call the sync balance API endpoint
+            const response = await fetch(`/api/students/${studentId}/sync-balance`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to sync balance');
+            }
+
+            toast({
+                title: 'Balance Synced',
+                description: `${studentName}'s balance has been updated to match the expected amount.`,
+            });
+
+            // Call the provided callback if it exists
+            if (onSyncBalance) {
+                onSyncBalance();
+            }
+
+            // Close dialog and refresh
+            setOpen(false);
+            router.refresh();
+        } catch (error) {
+            toast({
+                title: 'Error',
+                description: error instanceof Error ? error.message : 'An error occurred',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsSyncing(false);
+        }
+    };
+
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -116,9 +166,39 @@ export default function BalanceAdjustment({
                         <DialogTitle>Adjust Student Balance</DialogTitle>
                         <DialogDescription>
                             Current balance: {formatCurrency(currentBalance)}
+                            {expectedBalance && expectedBalance > currentBalance && (
+                                <div className="mt-1 text-yellow-600">
+                                    Expected balance: {formatCurrency(expectedBalance)}
+                                </div>
+                            )}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
+                        {/* Add sync option when expected balance is higher */}
+                        {expectedBalance && expectedBalance > currentBalance && (
+                            <div className="bg-yellow-50 p-3 rounded-md border border-yellow-200">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h4 className="font-medium text-sm text-yellow-800">Expected Higher Balance</h4>
+                                        <p className="text-xs text-yellow-700 mt-1">
+                                            Based on the school year schedule, this student should have a balance of {formatCurrency(expectedBalance)}.
+                                        </p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        className="border-yellow-500 text-yellow-700 hover:bg-yellow-100"
+                                        onClick={handleSyncToExpected}
+                                        disabled={isSyncing}
+                                    >
+                                        <RefreshCw className="h-4 w-4 mr-1" />
+                                        {isSyncing ? 'Syncing...' : 'Sync Balance'}
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="grid gap-2">
                             <Label htmlFor="adjustment-type">Adjustment Type</Label>
                             <Select
@@ -180,13 +260,14 @@ export default function BalanceAdjustment({
                             type="button"
                             variant="outline"
                             onClick={() => setOpen(false)}
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || isSyncing}
+                            className="mr-auto"
                         >
                             Cancel
                         </Button>
                         <Button
                             type="submit"
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || isSyncing}
                             variant={adjustmentType === 'increase' ? 'destructive' : 'default'}
                         >
                             {isSubmitting ? 'Updating...' : 'Update Balance'}

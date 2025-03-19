@@ -17,9 +17,11 @@ import {
     Mail
 } from 'lucide-react'
 import { formatCurrency, formatDate, formatMonth } from '@/lib/utils/format'
+import { calculateExpectedBalance } from '@/lib/utils/balance' // Add this import
 import StudentPaymentHistory from '@/components/students/student-payment-history'
 import StudentPaymentCalendar from '@/components/students/student-payment-calendar'
 import StudentDetailSkeleton from '@/components/skeletons/student-detail-skeleton'
+import BalanceAdjustment from '@/components/students/balance-adjustement' // Add this import
 
 // This component fetches and displays the actual student details
 async function StudentDetailContent({
@@ -59,10 +61,33 @@ async function StudentDetailContent({
         notFound()
     }
 
-    // Get the active school year for the payment calendar
+    // Get the active school year for the payment calendar and expected balance calculation
     const activeSchoolYear = await prisma.schoolYear.findFirst({
         where: { active: true }
     })
+
+    // Calculate expected balance if we have an active school year
+    let expectedBalance = 0
+    if (activeSchoolYear && student.grade) {
+        // Adapt student format for the balance utility
+        const adaptedStudent = {
+            id: student.id,
+            name: student.name,
+            grade: {
+                tuitionAmount: student.grade.tuitionAmount,
+                schoolYear: student.grade.schoolYear
+            }
+        }
+
+        expectedBalance = calculateExpectedBalance(
+            adaptedStudent,
+            activeSchoolYear,
+            student.payments.filter(p => p.schoolYearId === activeSchoolYear.id)
+        )
+    }
+
+    // Convert stored balance to number for comparison
+    const currentBalance = parseFloat(student.balance.toString())
 
     return (
         <div className="space-y-6">
@@ -110,11 +135,29 @@ async function StudentDetailContent({
                         </div>
                         <div className="grid gap-2">
                             <div className="text-sm font-medium">Current Balance</div>
-                            <div className={`text-xl font-bold ${parseFloat(student.balance.toString()) > 0 ? 'text-destructive' : ''}`}>
-                                {formatCurrency(parseFloat(student.balance.toString()))}
+                            <div className={`text-xl font-bold ${currentBalance > 0 ? 'text-destructive' : ''}`}>
+                                {formatCurrency(currentBalance)}
                             </div>
+
+                            {/* Show expected balance if it's different from current balance */}
+                            {expectedBalance > currentBalance && (
+                                <div className="text-sm text-yellow-600 font-medium">
+                                    Expected Balance: {formatCurrency(expectedBalance)}
+                                    <span className="block text-xs mt-1">
+                                        Based on school year from {formatDate(activeSchoolYear!.startDate)} to {formatDate(activeSchoolYear!.endDate)}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                         <div className="flex justify-end gap-2 mt-4">
+                            {/* Add Balance Adjustment component */}
+                            <BalanceAdjustment
+                                studentId={student.id}
+                                studentName={student.name}
+                                currentBalance={currentBalance}
+                                expectedBalance={expectedBalance > currentBalance ? expectedBalance : undefined}
+                            />
+
                             <Button variant="outline" asChild>
                                 <Link href={`/students/${student.id}/edit`}>
                                     <Pencil className="mr-2 h-4 w-4" />
@@ -178,6 +221,8 @@ async function StudentDetailContent({
                             schoolYearId={activeSchoolYear.id}
                             monthlyFee={parseFloat(student.grade.tuitionAmount.toString())}
                             studentId={student.id}
+                            student={student} // Pass student object
+                            activeSchoolYear={activeSchoolYear} // Pass active school year
                         />
                     </CardContent>
                 </Card>
