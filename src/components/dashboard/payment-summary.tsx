@@ -1,20 +1,23 @@
 // src/components/dashboard/payment-summary.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatMonth } from '@/lib/utils/format'
 import { cn } from '@/lib/utils/utils'
 import { ChevronRight } from 'lucide-react'
+import { getAllSchoolYearMonths, formatMonthYear, type MonthYearPair } from '@/lib/utils/balance'
 
 interface Payment {
     id: string
     studentId: string
     amount: any // This allows for Prisma Decimal type
     forMonth: number
+    forYear?: number // Added to handle year information
     isPartial: boolean
+    schoolYearId: string // Added to relate to school year
     student: {
         name: string
         grade: {
@@ -27,17 +30,58 @@ interface PaymentSummaryProps {
     payments: Payment[]
     totalStudents: number
     currentMonth: number
+    activeSchoolYear?: {  // Make it optional with ? and match your actual data structure
+        id: string
+        name: string
+        startDate: string | Date  // Accept either string or Date
+        endDate: string | Date    // Accept either string or Date
+        active?: boolean          // Make these optional
+        createdAt?: Date | string
+        updatedAt?: Date | string
+    }
+
 }
 
-export default function PaymentSummary({ payments, totalStudents, currentMonth }: PaymentSummaryProps) {
-    const [selectedMonth, setSelectedMonth] = useState(currentMonth)
 
-    // Filter payments for the selected month
-    const paymentsForMonth = payments.filter(payment => payment.forMonth === selectedMonth)
+export default function PaymentSummary({
+    payments,
+    totalStudents,
+    currentMonth,
+    activeSchoolYear
+}: PaymentSummaryProps) {
+    // Add the null check here, replacing the existing allMonthYears calculation
+    const allMonthYears = activeSchoolYear
+        ? getAllSchoolYearMonths(activeSchoolYear)
+        : [{
+            month: currentMonth,
+            year: new Date().getFullYear(),
+            key: `${new Date().getFullYear()}-${currentMonth.toString().padStart(2, '0')}`
+        }];
+    // Find current month-year (closest to today's date)
+    const today = new Date()
+    const currentMonthYear = allMonthYears.find(my =>
+        my.month === today.getMonth() + 1 &&
+        my.year === today.getFullYear()
+    ) || allMonthYears[0] // Fallback to first month if not found
+
+    // State for selected month-year
+    const [selectedMonthYear, setSelectedMonthYear] = useState<MonthYearPair>(currentMonthYear)
+
+    // Filter payments for the selected month-year
+    const paymentsForMonthYear = payments.filter(payment => {
+        if (payment.forYear) {
+            // If forYear is available, use exact matching
+            return payment.forMonth === selectedMonthYear.month &&
+                payment.forYear === selectedMonthYear.year
+        } else {
+            // For backward compatibility, just use month
+            return payment.forMonth === selectedMonthYear.month
+        }
+    })
 
     // Group payments by student
     const studentPayments = new Map()
-    paymentsForMonth.forEach(payment => {
+    paymentsForMonthYear.forEach(payment => {
         if (!studentPayments.has(payment.studentId)) {
             studentPayments.set(payment.studentId, {
                 name: payment.student.name,
@@ -63,8 +107,8 @@ export default function PaymentSummary({ payments, totalStudents, currentMonth }
     const partialStudents = Array.from(studentPayments.values()).filter(student => student.isPartial).length
     const unpaidStudents = totalStudents - paidStudents - partialStudents
 
-    // Get total amount collected for the month
-    const totalCollected = paymentsForMonth.reduce((sum, payment) => {
+    // Get total amount collected for the month-year
+    const totalCollected = paymentsForMonthYear.reduce((sum, payment) => {
         // Handle Prisma Decimal, string, or number types
         const amount = typeof payment.amount === 'object' ?
             parseFloat(payment.amount.toString()) :
@@ -77,9 +121,9 @@ export default function PaymentSummary({ payments, totalStudents, currentMonth }
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Payment Summary - {formatMonth(selectedMonth)}</CardTitle>
+                <CardTitle>Payment Summary - {formatMonthYear(selectedMonthYear)}</CardTitle>
                 <CardDescription>
-                    Overview of current month payment status
+                    Overview of payment status for {formatMonthYear(selectedMonthYear)}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -99,20 +143,28 @@ export default function PaymentSummary({ payments, totalStudents, currentMonth }
                 </div>
 
                 <div className="mb-6">
-                    <div className="text-lg font-medium mb-2">Monthly Navigation</div>
+                    <div className="text-lg font-medium mb-2">School Year Navigation</div>
                     <div className="flex flex-wrap gap-2">
-                        {Array.from({ length: 12 }, (_, i) => i + 1).map(month => {
-                            // Check if there are any payments for this month
-                            const hasPayments = payments.some(payment => payment.forMonth === month)
+                        {allMonthYears.map(monthYear => {
+                            // Check if there are any payments for this month-year
+                            const hasPayments = payments.some(payment => {
+                                if (payment.forYear) {
+                                    return payment.forMonth === monthYear.month &&
+                                        payment.forYear === monthYear.year
+                                } else {
+                                    return payment.forMonth === monthYear.month
+                                }
+                            })
+
                             return (
                                 <Button
-                                    key={month}
-                                    variant={selectedMonth === month ? "default" : hasPayments ? "outline" : "ghost"}
+                                    key={monthYear.key}
+                                    variant={selectedMonthYear.key === monthYear.key ? "default" : hasPayments ? "outline" : "ghost"}
                                     size="sm"
-                                    onClick={() => setSelectedMonth(month)}
+                                    onClick={() => setSelectedMonthYear(monthYear)}
                                     className={hasPayments ? "" : "opacity-50"}
                                 >
-                                    {formatMonth(month).substring(0, 3)}
+                                    {formatMonth(monthYear.month).substring(0, 3)} {monthYear.year.toString().slice(2)}
                                     {hasPayments && <span className="ml-1 h-1.5 w-1.5 rounded-full bg-primary-foreground inline-block"></span>}
                                 </Button>
                             )
@@ -127,13 +179,13 @@ export default function PaymentSummary({ payments, totalStudents, currentMonth }
                     </div>
                 </div>
 
-                {paymentsForMonth.length === 0 ? (
+                {paymentsForMonthYear.length === 0 ? (
                     <div className="text-center py-4 text-muted-foreground">
-                        No payments recorded for {formatMonth(selectedMonth)}
+                        No payments recorded for {formatMonthYear(selectedMonthYear)}
                     </div>
                 ) : (
                     <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
-                        {paymentsForMonth.slice(0, 5).map(payment => (
+                        {paymentsForMonthYear.slice(0, 5).map(payment => (
                             <div
                                 key={payment.id}
                                 className={cn(

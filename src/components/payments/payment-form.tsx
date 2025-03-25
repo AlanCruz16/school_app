@@ -1,3 +1,4 @@
+// src/components/payments/payment-form.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -47,8 +48,11 @@ interface PaymentFormProps {
     activeSchoolYear: {
         id: string
         name: string
+        startDate: Date | string
+        endDate: Date | string
     }
-    initialMonth?: number // Add this prop
+    initialMonth?: number
+    initialYear?: number // Added this new prop
 }
 
 export default function PaymentForm({
@@ -56,7 +60,8 @@ export default function PaymentForm({
     clerkId,
     clerkName,
     activeSchoolYear,
-    initialMonth
+    initialMonth,
+    initialYear
 }: PaymentFormProps) {
     const router = useRouter()
     const { toast } = useToast()
@@ -101,9 +106,23 @@ export default function PaymentForm({
     // Form state
     const [paymentMethod, setPaymentMethod] = useState('CASH')
     const [month, setMonth] = useState(initialMonth ? initialMonth.toString() : '')
+    const [year, setYear] = useState(initialYear ? initialYear.toString() : new Date().getFullYear().toString())
     const [isPartial, setIsPartial] = useState(false)
     const [amount, setAmount] = useState(monthlyFee.toString())
     const [notes, setNotes] = useState('')
+
+    // Determine available years based on school year
+    const getAvailableYears = () => {
+        const startDate = new Date(activeSchoolYear.startDate)
+        const endDate = new Date(activeSchoolYear.endDate)
+        const startYear = startDate.getFullYear()
+        const endYear = endDate.getFullYear()
+
+        return Array.from(
+            { length: endYear - startYear + 1 },
+            (_, i) => startYear + i
+        )
+    }
 
     // Update amount when monthly fee or partial status changes
     useEffect(() => {
@@ -125,7 +144,7 @@ export default function PaymentForm({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        if (!month || !amount) {
+        if (!month || !amount || !year) {
             toast({
                 title: 'Validation Error',
                 description: 'Please fill out all required fields.',
@@ -158,6 +177,7 @@ export default function PaymentForm({
                 amount: paymentAmount,
                 paymentMethod,
                 forMonth: parseInt(month),
+                forYear: parseInt(year), // Include the year information
                 schoolYearId: activeSchoolYear.id,
                 clerkId,
                 receiptNumber: generateReceiptNumber(),
@@ -250,25 +270,47 @@ export default function PaymentForm({
                         </RadioGroup>
                     </div>
 
-                    {/* Payment Month */}
-                    <div className="space-y-3">
-                        <Label htmlFor="month">Month *</Label>
-                        <Select
-                            value={month}
-                            onValueChange={setMonth}
-                            required
-                        >
-                            <SelectTrigger id="month">
-                                <SelectValue placeholder="Select month" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                                    <SelectItem key={m} value={m.toString()}>
-                                        {formatMonth(m)} ({activeSchoolYear.name})
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                    {/* Payment Month and Year */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                            <Label htmlFor="month">Month *</Label>
+                            <Select
+                                value={month}
+                                onValueChange={setMonth}
+                                required
+                            >
+                                <SelectTrigger id="month">
+                                    <SelectValue placeholder="Select month" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                                        <SelectItem key={m} value={m.toString()}>
+                                            {formatMonth(m)}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-3">
+                            <Label htmlFor="year">Year *</Label>
+                            <Select
+                                value={year}
+                                onValueChange={setYear}
+                                required
+                            >
+                                <SelectTrigger id="year">
+                                    <SelectValue placeholder="Select year" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {getAvailableYears().map((y) => (
+                                        <SelectItem key={y} value={y.toString()}>
+                                            {y}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
 
                     {/* Partial Payment Toggle */}
@@ -335,8 +377,8 @@ export default function PaymentForm({
                                 <span>{formatCurrency(parseFloat(amount) || 0)}</span>
                             </div>
                             <div className="grid grid-cols-2">
-                                <span className="text-muted-foreground">Month:</span>
-                                <span>{month ? formatMonth(parseInt(month)) : "--"}</span>
+                                <span className="text-muted-foreground">Period:</span>
+                                <span>{month ? `${formatMonth(parseInt(month))} ${year}` : "--"}</span>
                             </div>
                             <div className="grid grid-cols-2">
                                 <span className="text-muted-foreground">Payment Method:</span>

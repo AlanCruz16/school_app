@@ -75,6 +75,7 @@ model Payment {
   paymentDate   DateTime   @default(now())
   paymentMethod PaymentMethod
   forMonth      Int        // 1-12 representing Jan-Dec
+  forYear       Int        @default(2025) // Add this new field with a default (current year)
   schoolYear    SchoolYear @relation(fields: [schoolYearId], references: [id])
   schoolYearId  String
   clerk         User       @relation(fields: [clerkId], references: [id])

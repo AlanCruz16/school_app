@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Payment" ADD COLUMN     "forYear" INTEGER NOT NULL DEFAULT 2025;

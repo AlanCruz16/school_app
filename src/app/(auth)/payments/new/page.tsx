@@ -11,7 +11,7 @@ import StudentSelector from '@/components/payments/student-selector'
 export default async function NewPaymentPage({
     searchParams
 }: {
-    searchParams: { studentId?: string }
+    searchParams: { studentId?: string, month?: string, year?: string }
 }) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -81,6 +81,10 @@ export default async function NewPaymentPage({
 
     // Check if a student ID was provided
     const studentId = searchParams.studentId
+
+    // Parse month and year parameters if provided
+    const initialMonth = searchParams.month ? parseInt(searchParams.month) : undefined
+    const initialYear = searchParams.year ? parseInt(searchParams.year) : undefined
 
     // If no student ID is provided, show student selector
     if (!studentId) {
@@ -166,6 +170,8 @@ export default async function NewPaymentPage({
                 clerkId={clerk.id}
                 clerkName={clerk.name}
                 activeSchoolYear={activeSchoolYear}
+                initialMonth={initialMonth}
+                initialYear={initialYear}
             />
         </div>
     )

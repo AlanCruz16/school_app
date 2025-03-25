@@ -1,3 +1,4 @@
+// src/components/calendar/payment-calendar.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -14,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { formatCurrency, formatMonth } from '@/lib/utils/format'
 import { cn } from '@/lib/utils/utils'
 import Link from 'next/link'
+import { getAllSchoolYearMonths, formatMonthYear, type MonthYearPair } from '@/lib/utils/balance'
 
 interface Student {
     id: string
@@ -32,6 +34,7 @@ interface Payment {
     paymentDate: string | Date
     paymentMethod: string
     forMonth: number
+    forYear?: number // Optional year field
     isPartial: boolean
     schoolYearId: string
     student: {
@@ -45,6 +48,9 @@ interface Payment {
 interface SchoolYear {
     id: string
     name: string
+    startDate: Date | string
+    endDate: Date | string
+    active: boolean
 }
 
 interface Grade {
@@ -72,7 +78,25 @@ export default function PaymentCalendar({
     const [selectedSchoolYear, setSelectedSchoolYear] = useState(currentSchoolYearId)
     const [selectedGrade, setSelectedGrade] = useState('all_grades')
     const [selectedStudent, setSelectedStudent] = useState('all_students')
-    const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1)
+    const [selectedMonthYear, setSelectedMonthYear] = useState<MonthYearPair | null>(null)
+
+    // Get the currently selected school year object
+    const currentSchoolYear = schoolYears.find(year => year.id === selectedSchoolYear)
+
+    // Generate all month-year pairs for the selected school year
+    const allMonthYears = currentSchoolYear
+        ? getAllSchoolYearMonths(currentSchoolYear)
+        : []
+
+    // Update selectedMonthYear when school year changes
+    useEffect(() => {
+        // Default to the first month of the school year when it changes
+        if (allMonthYears.length > 0) {
+            setSelectedMonthYear(allMonthYears[0])
+        } else {
+            setSelectedMonthYear(null)
+        }
+    }, [selectedSchoolYear])
 
     // Filter students by grade if grade is selected
     const filteredStudents = selectedGrade !== 'all_grades'
@@ -93,8 +117,16 @@ export default function PaymentCalendar({
             match = match && payment.studentId === selectedStudent
         }
 
-        if (selectedMonth !== null && match) {
-            match = match && payment.forMonth === selectedMonth
+        if (selectedMonthYear && match) {
+            // Match on both month and year if payment has forYear field
+            if (payment.forYear) {
+                match = match &&
+                    payment.forMonth === selectedMonthYear.month &&
+                    payment.forYear === selectedMonthYear.year
+            } else {
+                // For backward compatibility
+                match = match && payment.forMonth === selectedMonthYear.month
+            }
         }
 
         return match
@@ -113,29 +145,40 @@ export default function PaymentCalendar({
     // Create a mapping of students to their payment status for the selected month
     const studentPaymentMap = new Map()
 
-    filteredStudents.forEach(student => {
-        const payments = filteredPayments.filter(
-            payment => payment.studentId === student.id && payment.forMonth === selectedMonth
-        )
+    if (selectedMonthYear) {
+        filteredStudents.forEach(student => {
+            const paymentsForMonthYear = filteredPayments.filter(payment => {
+                // Match payment to the specific month-year
+                if (payment.studentId === student.id) {
+                    if (payment.forYear) {
+                        return payment.forMonth === selectedMonthYear.month &&
+                            payment.forYear === selectedMonthYear.year
+                    } else {
+                        return payment.forMonth === selectedMonthYear.month
+                    }
+                }
+                return false
+            })
 
-        const totalPaid = payments.reduce((sum, payment) => {
-            const amount = typeof payment.amount === 'string'
-                ? parseFloat(payment.amount)
-                : payment.amount
-            return sum + amount
-        }, 0)
+            const totalPaid = paymentsForMonthYear.reduce((sum, payment) => {
+                const amount = typeof payment.amount === 'string'
+                    ? parseFloat(payment.amount)
+                    : payment.amount
+                return sum + amount
+            }, 0)
 
-        let status = 'unpaid'
-        if (payments.length > 0) {
-            status = payments.some(p => p.isPartial) ? 'partial' : 'paid'
-        }
+            let status = 'unpaid'
+            if (paymentsForMonthYear.length > 0) {
+                status = paymentsForMonthYear.some(p => p.isPartial) ? 'partial' : 'paid'
+            }
 
-        studentPaymentMap.set(student.id, {
-            status,
-            totalPaid,
-            payments
+            studentPaymentMap.set(student.id, {
+                status,
+                totalPaid,
+                payments: paymentsForMonthYear
+            })
         })
-    })
+    }
 
     return (
         <Card>
@@ -146,6 +189,7 @@ export default function PaymentCalendar({
                 </CardDescription>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                    {/* School Year Selector */}
                     <div>
                         <Select
                             value={selectedSchoolYear}
@@ -164,6 +208,7 @@ export default function PaymentCalendar({
                         </Select>
                     </div>
 
+                    {/* Grade Selector */}
                     <div>
                         <Select
                             value={selectedGrade}
@@ -185,6 +230,7 @@ export default function PaymentCalendar({
                         </Select>
                     </div>
 
+                    {/* Student Selector */}
                     <div>
                         <Select
                             value={selectedStudent}
@@ -204,18 +250,24 @@ export default function PaymentCalendar({
                         </Select>
                     </div>
 
+                    {/* Month-Year Selector */}
                     <div>
                         <Select
-                            value={selectedMonth.toString()}
-                            onValueChange={(value) => setSelectedMonth(parseInt(value))}
+                            value={selectedMonthYear ? selectedMonthYear.key : ''}
+                            onValueChange={(value) => {
+                                const monthYear = allMonthYears.find(my => my.key === value)
+                                if (monthYear) {
+                                    setSelectedMonthYear(monthYear)
+                                }
+                            }}
                         >
                             <SelectTrigger>
                                 <SelectValue placeholder="Select Month" />
                             </SelectTrigger>
                             <SelectContent>
-                                {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
-                                    <SelectItem key={month} value={month.toString()}>
-                                        {formatMonth(month)}
+                                {allMonthYears.map(monthYear => (
+                                    <SelectItem key={monthYear.key} value={monthYear.key}>
+                                        {formatMonthYear(monthYear)}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -240,85 +292,93 @@ export default function PaymentCalendar({
             </CardHeader>
 
             <CardContent>
-                <div className="text-lg font-medium mb-4">
-                    {formatMonth(selectedMonth)} Payment Status
-                </div>
-
-                {filteredStudents.length === 0 ? (
+                {!selectedMonthYear ? (
                     <div className="text-center py-8 text-muted-foreground">
-                        No students found matching your criteria.
+                        Please select a school year and month to view payment status.
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {filteredStudents.map(student => {
-                            const paymentInfo = studentPaymentMap.get(student.id) || {
-                                status: 'unpaid',
-                                totalPaid: 0,
-                                payments: []
-                            }
+                    <>
+                        <div className="text-lg font-medium mb-4">
+                            {formatMonthYear(selectedMonthYear)} Payment Status
+                        </div>
 
-                            const statusColors = {
-                                paid: 'bg-green-50 border-green-200',
-                                partial: 'bg-yellow-50 border-yellow-200',
-                                unpaid: 'bg-gray-50 border-gray-200'
-                            }
+                        {filteredStudents.length === 0 ? (
+                            <div className="text-center py-8 text-muted-foreground">
+                                No students found matching your criteria.
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                {filteredStudents.map(student => {
+                                    const paymentInfo = studentPaymentMap.get(student.id) || {
+                                        status: 'unpaid',
+                                        totalPaid: 0,
+                                        payments: []
+                                    }
 
-                            const statusLabels = {
-                                paid: 'Paid',
-                                partial: 'Partial',
-                                unpaid: 'Unpaid'
-                            }
+                                    const statusColors = {
+                                        paid: 'bg-green-50 border-green-200',
+                                        partial: 'bg-yellow-50 border-yellow-200',
+                                        unpaid: 'bg-gray-50 border-gray-200'
+                                    }
 
-                            const statusTextColors = {
-                                paid: 'text-green-600',
-                                partial: 'text-yellow-600',
-                                unpaid: 'text-gray-600'
-                            }
+                                    const statusLabels = {
+                                        paid: 'Paid',
+                                        partial: 'Partial',
+                                        unpaid: 'Unpaid'
+                                    }
 
-                            return (
-                                <Link
-                                    href={`/students/${student.id}`}
-                                    key={student.id}
-                                    className="block"
-                                >
-                                    <div
-                                        className={cn(
-                                            "p-4 rounded-lg border-l-4 hover:shadow transition-shadow",
-                                            statusColors[paymentInfo.status as keyof typeof statusColors]
-                                        )}
-                                    >
-                                        <div className="font-semibold truncate">{student.name}</div>
-                                        <div className="text-sm text-muted-foreground">
-                                            {student.grade.name}
-                                        </div>
-                                        <div className={cn(
-                                            "mt-2 font-medium",
-                                            statusTextColors[paymentInfo.status as keyof typeof statusTextColors]
-                                        )}>
-                                            {statusLabels[paymentInfo.status as keyof typeof statusLabels]}
-                                        </div>
-                                        <div className="text-sm mt-1">
-                                            {formatCurrency(paymentInfo.totalPaid)}
-                                        </div>
-                                    </div>
-                                </Link>
-                            )
-                        })}
-                    </div>
+                                    const statusTextColors = {
+                                        paid: 'text-green-600',
+                                        partial: 'text-yellow-600',
+                                        unpaid: 'text-gray-600'
+                                    }
+
+                                    return (
+                                        <Link
+                                            href={`/students/${student.id}`}
+                                            key={student.id}
+                                            className="block"
+                                        >
+                                            <div
+                                                className={cn(
+                                                    "p-4 rounded-lg border-l-4 hover:shadow transition-shadow",
+                                                    statusColors[paymentInfo.status as keyof typeof statusColors]
+                                                )}
+                                            >
+                                                <div className="font-semibold truncate">{student.name}</div>
+                                                <div className="text-sm text-muted-foreground">
+                                                    {student.grade.name}
+                                                </div>
+                                                <div className={cn(
+                                                    "mt-2 font-medium",
+                                                    statusTextColors[paymentInfo.status as keyof typeof statusTextColors]
+                                                )}>
+                                                    {statusLabels[paymentInfo.status as keyof typeof statusLabels]}
+                                                </div>
+                                                <div className="text-sm mt-1">
+                                                    {formatCurrency(paymentInfo.totalPaid)}
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </>
                 )}
 
                 {/* Month Selector Buttons */}
                 <div className="mt-8">
                     <div className="text-sm font-medium mb-2">Quick Month Navigation</div>
                     <div className="flex flex-wrap gap-2">
-                        {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                        {allMonthYears.map((monthYear) => (
                             <Button
-                                key={month}
-                                variant={selectedMonth === month ? "default" : "outline"}
+                                key={monthYear.key}
+                                variant={selectedMonthYear?.key === monthYear.key ? "default" : "outline"}
                                 size="sm"
-                                onClick={() => setSelectedMonth(month)}
+                                onClick={() => setSelectedMonthYear(monthYear)}
                             >
-                                {formatMonth(month).substring(0, 3)}
+                                {formatMonth(monthYear.month)} {monthYear.year.toString().slice(2)}
                             </Button>
                         ))}
                     </div>

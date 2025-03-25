@@ -1,4 +1,5 @@
 // src/app/api/payments/route.ts
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { createClient } from '@/lib/utils/supabase/server'
@@ -39,6 +40,9 @@ export async function POST(request: NextRequest) {
             })
         }
 
+        // Determine year if not provided (use current year as default)
+        const forYear = data.forYear || new Date().getFullYear()
+
         // Get student to update balance
         const student = await prisma.student.findUnique({
             where: { id: data.studentId },
@@ -60,6 +64,7 @@ export async function POST(request: NextRequest) {
                     amount: data.amount,
                     paymentMethod: data.paymentMethod,
                     forMonth: data.forMonth,
+                    forYear: forYear, // Include the year
                     schoolYearId: data.schoolYearId,
                     clerkId: data.clerkId,
                     receiptNumber: data.receiptNumber,
@@ -112,6 +117,7 @@ export async function GET(request: NextRequest) {
         const studentId = searchParams.get('studentId')
         const schoolYearId = searchParams.get('schoolYearId')
         const month = searchParams.get('month') ? parseInt(searchParams.get('month')!) : undefined
+        const year = searchParams.get('year') ? parseInt(searchParams.get('year')!) : undefined
         const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined
 
         // Build filters
@@ -127,6 +133,10 @@ export async function GET(request: NextRequest) {
 
         if (month !== undefined) {
             filters.forMonth = month
+        }
+
+        if (year !== undefined) {
+            filters.forYear = year
         }
 
         // Fetch payments with the applied filters

@@ -151,6 +151,7 @@ async function DashboardContent() {
                     payments={allPayments}
                     totalStudents={totalStudents}
                     currentMonth={currentMonth}
+                    activeSchoolYear={activeSchoolYear || undefined} // Add this line
                 />
 
                 <Card>

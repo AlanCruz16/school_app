@@ -29,8 +29,16 @@ export type PaymentParam = {
     amount: any; // Handle Prisma Decimal, number or string
     paymentDate: Date | string;
     forMonth: number;
+    forYear?: number; // Optional year field for backward compatibility
     schoolYearId: string;
     isPartial?: boolean;
+};
+
+// New type to represent a month with its year
+export type MonthYearPair = {
+    month: number; // 1-12
+    year: number;  // Full year (e.g., 2024)
+    key: string;   // Unique identifier (e.g., "2024-09")
 };
 
 /**
@@ -84,7 +92,7 @@ export function getUnpaidMonths(
     student: StudentWithGrade,
     activeSchoolYear: SchoolYearParam,
     payments: PaymentParam[]
-): { month: number; status: 'paid' | 'partial' | 'unpaid'; expectedAmount: number }[] {
+): { monthYear: MonthYearPair; status: 'paid' | 'partial' | 'unpaid'; expectedAmount: number }[] {
     // Get the monthly tuition fee
     const monthlyFee = typeof student.grade.tuitionAmount === 'object'
         ? parseFloat(student.grade.tuitionAmount.toString())
@@ -100,21 +108,27 @@ export function getUnpaidMonths(
     // Get the months that should be paid by now
     const monthsToPay = getMonthsToPay(activeSchoolYear);
 
-    // Create a map to track payments by month
-    const paymentsByMonth = new Map<number, number>();
+    // Create a map to track payments by month-year key
+    const paymentsByMonth = new Map<string, number>();
 
     // Initialize all months with zero
-    monthsToPay.forEach(month => {
-        paymentsByMonth.set(month, 0);
+    monthsToPay.forEach(monthYear => {
+        paymentsByMonth.set(monthYear.key, 0);
     });
 
     // Sum up payments for each month in this school year
     payments
         .filter(payment => payment.schoolYearId === activeSchoolYear.id)
         .forEach(payment => {
-            const month = payment.forMonth;
-            if (monthsToPay.includes(month)) {
-                const currentTotal = paymentsByMonth.get(month) || 0;
+            // Try to find a matching month-year
+            const matchingMonthYear = monthsToPay.find(monthYear =>
+                monthYear.month === payment.forMonth &&
+                // If forYear is provided, use it for exact matching
+                (payment.forYear ? monthYear.year === payment.forYear : true)
+            );
+
+            if (matchingMonthYear) {
+                const currentTotal = paymentsByMonth.get(matchingMonthYear.key) || 0;
 
                 const paymentAmount = typeof payment.amount === 'object'
                     ? parseFloat(payment.amount.toString())
@@ -123,14 +137,14 @@ export function getUnpaidMonths(
                         : payment.amount;
 
                 if (!isNaN(paymentAmount)) {
-                    paymentsByMonth.set(month, currentTotal + paymentAmount);
+                    paymentsByMonth.set(matchingMonthYear.key, currentTotal + paymentAmount);
                 }
             }
         });
 
     // Create the result array
-    return monthsToPay.map(month => {
-        const paid = paymentsByMonth.get(month) || 0;
+    return monthsToPay.map(monthYear => {
+        const paid = paymentsByMonth.get(monthYear.key) || 0;
         let status: 'paid' | 'partial' | 'unpaid';
 
         if (paid >= monthlyFee) {
@@ -142,7 +156,7 @@ export function getUnpaidMonths(
         }
 
         return {
-            month,
+            monthYear,
             status,
             expectedAmount: monthlyFee
         };
@@ -151,8 +165,9 @@ export function getUnpaidMonths(
 
 /**
  * Determine which months of the school year should be paid by now
+ * Now returns an array of month-year objects instead of just month numbers
  */
-function getMonthsToPay(schoolYear: SchoolYearParam): number[] {
+export function getMonthsToPay(schoolYear: SchoolYearParam): MonthYearPair[] {
     // Convert string dates to Date objects if needed
     const startDate = schoolYear.startDate instanceof Date
         ? schoolYear.startDate
@@ -167,16 +182,64 @@ function getMonthsToPay(schoolYear: SchoolYearParam): number[] {
     // Use the earlier of today or the school year end date
     const cutoffDate = today < endDate ? today : endDate;
 
-    const result: number[] = [];
+    const result: MonthYearPair[] = [];
     let currentDate = new Date(startDate);
 
     // Loop through all months from start date to cutoff date
     while (currentDate <= cutoffDate) {
         const month = currentDate.getMonth() + 1; // 1-12 format
+        const year = currentDate.getFullYear();
+        const key = `${year}-${month.toString().padStart(2, '0')}`;
 
-        if (!result.includes(month)) {
-            result.push(month);
+        // Only add this month-year pair if we haven't seen it yet
+        if (!result.some(item => item.key === key)) {
+            result.push({ month, year, key });
         }
+
+        // Move to next month
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        // Reset the day to avoid issues with different month lengths
+        currentDate.setDate(1);
+    }
+
+    return result;
+}
+
+/**
+ * Format a month-year pair for display
+ */
+export function formatMonthYear(monthYear: MonthYearPair): string {
+    const date = new Date(monthYear.year, monthYear.month - 1, 1);
+    return date.toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric'
+    });
+}
+
+/**
+ * Get an ordered array of all month-year pairs in a school year
+ * Useful for displaying the full school year calendar
+ */
+export function getAllSchoolYearMonths(schoolYear: SchoolYearParam): MonthYearPair[] {
+    // Convert string dates to Date objects if needed
+    const startDate = schoolYear.startDate instanceof Date
+        ? schoolYear.startDate
+        : new Date(schoolYear.startDate);
+
+    const endDate = schoolYear.endDate instanceof Date
+        ? schoolYear.endDate
+        : new Date(schoolYear.endDate);
+
+    const result: MonthYearPair[] = [];
+    let currentDate = new Date(startDate);
+
+    // Loop through all months from start date to end date
+    while (currentDate <= endDate) {
+        const month = currentDate.getMonth() + 1; // 1-12 format
+        const year = currentDate.getFullYear();
+        const key = `${year}-${month.toString().padStart(2, '0')}`;
+
+        result.push({ month, year, key });
 
         // Move to next month
         currentDate.setMonth(currentDate.getMonth() + 1);
