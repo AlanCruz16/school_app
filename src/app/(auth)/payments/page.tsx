@@ -1,36 +1,17 @@
-// src/app/(auth)/payments/page.tsx
-import { Suspense } from 'react'
+// src/app/(auth)/payments/new/page.tsx
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/utils/supabase/server'
+import { ArrowLeft } from 'lucide-react'
 import { prisma } from '@/lib/db'
+import { createClient } from '@/lib/utils/supabase/server'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { formatCurrency, formatDate, formatMonth } from '@/lib/utils/format'
-import { PlusCircle } from 'lucide-react'
-import PaymentsListSkeleton from '@/components/skeletons/payments-list-skeleton'
-import { SuspenseWrapper } from '@/lib/utils/suspense-wrapper'
-import PaymentActionButtons from '@/components/payments/payment-action-buttons'
-import PaymentFilters from '@/components/payments/payment-filters'
+import PaymentForm from '@/components/payments/payment-form'
+import StudentSelector from '@/components/payments/student-selector'
 
-// This component fetches and displays the actual payments list
-async function PaymentsContent({
+export default async function NewPaymentPage({
     searchParams
 }: {
-    searchParams: {
-        query?: string;
-        studentId?: string;
-        month?: string;
-        schoolYearId?: string;
-    }
+    searchParams: { studentId?: string, month?: string, year?: string }
 }) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -39,190 +20,168 @@ async function PaymentsContent({
         return null // Will be handled by middleware
     }
 
-    // Get active students for the filter
-    const students = await prisma.student.findMany({
-        where: {
-            active: true
-        },
-        select: {
-            id: true,
-            name: true
-        },
-        orderBy: {
-            name: 'asc'
-        }
+    // Get or create the clerk information
+    let clerk = await prisma.user.findUnique({
+        where: { email: user.email || '' }
     })
 
-    // Get school years for the filter
-    const schoolYears = await prisma.schoolYear.findMany({
-        orderBy: {
-            startDate: 'desc'
-        }
+    if (!clerk && user.email) {
+        // Create a new clerk record for this authenticated user
+        clerk = await prisma.user.create({
+            data: {
+                name: user.email.split('@')[0], // Basic name from email
+                email: user.email,
+                role: 'clerk' // Default role
+            }
+        });
+    }
+
+    // Now we should have a clerk, but just in case
+    if (!clerk) {
+        // Show a meaningful error instead of redirecting
+        return (
+            <div className="p-8">
+                <h1 className="text-xl font-bold mb-4">Account Setup Required</h1>
+                <p>Your user account isn't properly set up in the system. Please contact an administrator.</p>
+            </div>
+        )
+    }
+
+    // Get active school year
+    const activeSchoolYear = await prisma.schoolYear.findFirst({
+        where: { active: true }
     })
 
-    // Build query filters
-    const filters: any = {}
+    if (!activeSchoolYear) {
+        // There should be an active school year
+        return (
+            <div className="space-y-6">
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" asChild>
+                        <Link href="/dashboard">
+                            <ArrowLeft className="h-4 w-4" />
+                            <span className="sr-only">Back</span>
+                        </Link>
+                    </Button>
+                    <h1 className="text-3xl font-bold">New Payment</h1>
+                </div>
 
-    // Text search filter (receipt number or student name)
-    if (searchParams.query) {
-        filters.OR = [
-            {
-                receiptNumber: {
-                    contains: searchParams.query,
-                    mode: 'insensitive'
-                }
-            },
-            {
-                student: {
-                    name: {
-                        contains: searchParams.query,
-                        mode: 'insensitive'
-                    }
+                <div className="bg-destructive/10 text-destructive p-4 rounded-md">
+                    <h2 className="font-semibold">No Active School Year</h2>
+                    <p className="mt-1">
+                        There is no active school year. Please activate a school year before recording payments.
+                    </p>
+                    <Button className="mt-4" asChild variant="outline">
+                        <Link href="/settings/school-years">Manage School Years</Link>
+                    </Button>
+                </div>
+            </div>
+        )
+    }
+
+    // Check if a student ID was provided
+    const studentId = searchParams.studentId
+
+    // Parse month and year parameters if provided
+    const initialMonth = searchParams.month ? parseInt(searchParams.month) : undefined
+    const initialYear = searchParams.year ? parseInt(searchParams.year) : undefined
+
+    // If no student ID is provided, show student selector
+    if (!studentId) {
+        return (
+            <div className="space-y-6">
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" asChild>
+                        <Link href="/dashboard">
+                            <ArrowLeft className="h-4 w-4" />
+                            <span className="sr-only">Back</span>
+                        </Link>
+                    </Button>
+                    <h1 className="text-3xl font-bold">New Payment</h1>
+                </div>
+
+                <StudentSelector />
+            </div>
+        )
+    }
+
+    // Fetch the student with their grade information
+    const student = await prisma.student.findUnique({
+        where: { id: studentId },
+        include: {
+            grade: {
+                include: {
+                    schoolYear: true
                 }
             }
-        ]
-    }
-
-    // Student filter
-    if (searchParams.studentId && searchParams.studentId !== 'all_students') {
-        filters.studentId = searchParams.studentId
-    }
-
-    // Month filter
-    if (searchParams.month && searchParams.month !== 'all_months') {
-        filters.forMonth = parseInt(searchParams.month)
-    }
-
-    // School year filter
-    if (searchParams.schoolYearId && searchParams.schoolYearId !== 'all_years') {
-        filters.schoolYearId = searchParams.schoolYearId
-    }
-
-    // Fetch payments with filters
-    const payments = await prisma.payment.findMany({
-        where: filters,
-        orderBy: {
-            paymentDate: 'desc'
-        },
-        take: 50, // Limit to 50 payments at a time
-        include: {
-            student: {
-                select: {
-                    id: true,
-                    name: true,
-                    grade: {
-                        select: {
-                            name: true
-                        }
-                    }
-                }
-            },
-            schoolYear: true
         }
     })
+
+    if (!student) {
+        notFound()
+    }
+
+    // If student has no grade assigned, redirect to edit page
+    if (!student.grade) {
+        return (
+            <div className="space-y-6">
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" asChild>
+                        <Link href="/payments/new">
+                            <ArrowLeft className="h-4 w-4" />
+                            <span className="sr-only">Back</span>
+                        </Link>
+                    </Button>
+                    <h1 className="text-3xl font-bold">New Payment</h1>
+                </div>
+
+                <div className="bg-destructive/10 text-destructive p-4 rounded-md">
+                    <h2 className="font-semibold">Missing Grade Information</h2>
+                    <p className="mt-1">
+                        This student doesn't have a valid grade assignment. Please update the student record first.
+                    </p>
+                    <div className="flex gap-2 mt-4">
+                        <Button asChild variant="outline">
+                            <Link href="/payments/new">Choose Another Student</Link>
+                        </Button>
+                        <Button asChild>
+                            <Link href={`/students/${student.id}/edit`}>Edit Student</Link>
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    // Fetch the student's payment history for the active school year
+    const studentPayments = await prisma.payment.findMany({
+        where: {
+            studentId: student.id,
+            schoolYearId: activeSchoolYear.id
+        }
+    });
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold">Payments</h1>
-                    <p className="text-muted-foreground">
-                        Manage payment records and view payment history
-                    </p>
-                </div>
-                <Button asChild>
-                    <Link href="/payments/new">
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        New Payment
+            <div className="flex items-center gap-2">
+                <Button variant="outline" size="icon" asChild>
+                    <Link href={`/students/${student.id}`}>
+                        <ArrowLeft className="h-4 w-4" />
+                        <span className="sr-only">Back to student</span>
                     </Link>
                 </Button>
+                <h1 className="text-3xl font-bold">New Payment</h1>
             </div>
 
-            <PaymentFilters
-                students={students}
-                schoolYears={schoolYears}
+            <PaymentForm
+                student={student}
+                clerkId={clerk.id}
+                clerkName={clerk.name}
+                activeSchoolYear={activeSchoolYear}
+                initialMonth={initialMonth}
+                initialYear={initialYear}
+                studentPayments={studentPayments}
             />
-
-            <Card>
-                <CardContent className="p-0">
-                    <div className="rounded-md">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Receipt No.</TableHead>
-                                    <TableHead>Student</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Month</TableHead>
-                                    <TableHead>School Year</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Amount</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {payments.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                                            No payments found
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    payments.map((payment) => (
-                                        <TableRow key={payment.id}>
-                                            <TableCell className="font-medium">
-                                                {payment.receiptNumber}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Link
-                                                    href={`/students/${payment.studentId}`}
-                                                    className="hover:underline"
-                                                >
-                                                    {payment.student.name}
-                                                </Link>
-                                            </TableCell>
-                                            <TableCell>{formatDate(payment.paymentDate)}</TableCell>
-                                            <TableCell>{formatMonth(payment.forMonth)}</TableCell>
-                                            <TableCell>{payment.schoolYear.name}</TableCell>
-                                            <TableCell>
-                                                {payment.isPartial ? (
-                                                    <Badge variant="secondary">Partial</Badge>
-                                                ) : (
-                                                    <Badge variant="default">Full</Badge>
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="text-right font-medium">
-                                                {formatCurrency(parseFloat(payment.amount.toString()))}
-                                            </TableCell>
-                                            <TableCell>
-                                                <PaymentActionButtons paymentId={payment.id} />
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </CardContent>
-            </Card>
         </div>
-    )
-}
-
-export default function PaymentsPage({
-    searchParams
-}: {
-    searchParams: {
-        query?: string;
-        studentId?: string;
-        month?: string;
-        schoolYearId?: string;
-    }
-}) {
-    return (
-        <Suspense fallback={<PaymentsListSkeleton />}>
-            <SuspenseWrapper>
-                <PaymentsContent searchParams={searchParams} />
-            </SuspenseWrapper>
-        </Suspense>
     )
 }
