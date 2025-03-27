@@ -39,6 +39,34 @@ export default async function ReceiptPage({ params }: ReceiptPageProps) {
         notFound()
     }
 
+    // For multi-month payments - check if this payment is part of a batch
+    // Payments from the same transaction will have similar receipt numbers (base-month-year pattern)
+    const baseReceiptNumber = payment.receiptNumber.split('-')[0]; // Get the base part of the receipt
+
+    const relatedPayments = await prisma.payment.findMany({
+        where: {
+            receiptNumber: {
+                startsWith: baseReceiptNumber + '-'  // Find all with the same base
+            },
+            id: { not: payment.id } // Exclude the current payment
+        },
+        include: {
+            student: {
+                include: {
+                    grade: true
+                }
+            },
+            schoolYear: true,
+            clerk: true
+        }
+    });
+
+    // If we have related payments, include them with the main payment
+    const enhancedPayment = {
+        ...payment,
+        relatedPayments: relatedPayments.length > 0 ? relatedPayments : undefined
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -58,7 +86,7 @@ export default async function ReceiptPage({ params }: ReceiptPageProps) {
             </div>
 
             <Receipt
-                payment={payment}
+                payment={enhancedPayment}
                 schoolName="School Payment System"
                 schoolAddress="123 Education Lane, Schooltown"
                 schoolPhone="(123) 456-7890"

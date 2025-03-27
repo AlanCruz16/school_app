@@ -11,13 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Badge } from '@/components/ui/badge'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
     Card,
     CardContent,
@@ -29,7 +23,7 @@ import {
 import { useToast } from '@/components/ui/use-toast'
 import { formatCurrency, formatMonth } from '@/lib/utils/format'
 import { getAllSchoolYearMonths, formatMonthYear } from '@/lib/utils/balance'
-import { Check, AlertCircle } from 'lucide-react'
+import { Check, AlertCircle, Calendar } from 'lucide-react'
 
 interface Student {
     id: string
@@ -81,6 +75,7 @@ interface MonthData {
     key: string;
     status: MonthStatus;
     label: string;
+    fee: number;
 }
 
 export default function PaymentForm({
@@ -102,8 +97,7 @@ export default function PaymentForm({
 
     // Form state
     const [paymentMethod, setPaymentMethod] = useState('CASH')
-    const [month, setMonth] = useState('')
-    const [year, setYear] = useState(initialYear ? initialYear.toString() : new Date().getFullYear().toString())
+    const [selectedMonths, setSelectedMonths] = useState<string[]>([])
     const [isPartial, setIsPartial] = useState(false)
     const [amount, setAmount] = useState(monthlyFee.toString())
     const [notes, setNotes] = useState('')
@@ -164,16 +158,35 @@ export default function PaymentForm({
                 year: monthYear.year,
                 key: monthYear.key,
                 status,
-                label
+                label,
+                fee: monthlyFee
             };
         });
     }, [activeSchoolYear, payments, monthlyFee]);
 
     // Get unpaid and partially paid months
     const availablePaymentMonths = useMemo(() => {
-        // For now, filter out fully paid months
+        // Filter out fully paid months
         return availableMonths.filter(m => m.status !== 'paid');
     }, [availableMonths]);
+
+    // Calculate total amount based on selected months
+    const calculateTotalAmount = () => {
+        if (isPartial) {
+            // For partial payments, user enters specific amount
+            return parseFloat(amount);
+        } else {
+            // For full payments, multiply monthly fee by number of selected months
+            return selectedMonths.length * monthlyFee;
+        }
+    };
+
+    // Update amount when selection or partial status changes
+    useEffect(() => {
+        if (!isPartial) {
+            setAmount((selectedMonths.length * monthlyFee).toString());
+        }
+    }, [selectedMonths, isPartial, monthlyFee]);
 
     // Fetch payment history only if not provided through props
     useEffect(() => {
@@ -223,33 +236,27 @@ export default function PaymentForm({
         };
     }, [student.id, activeSchoolYear.id, toast]); // Removed payments from dependencies
 
-    // Set initial month/year if provided and available
-    useEffect(() => {
-        if (initialMonth && initialYear && !isLoading && availablePaymentMonths.length > 0) {
-            const initialMonthKey = `${initialYear}-${initialMonth.toString().padStart(2, '0')}`;
-            const monthExists = availablePaymentMonths.some(m => m.key === initialMonthKey);
-
-            if (monthExists) {
-                setMonth(initialMonthKey);
-                setYear(initialYear.toString());
+    // Handle month checkbox toggle
+    const toggleMonth = (monthKey: string) => {
+        setSelectedMonths(prevSelected => {
+            if (prevSelected.includes(monthKey)) {
+                return prevSelected.filter(key => key !== monthKey);
             } else {
-                // Select first available month if initial is not available
-                setMonth(availablePaymentMonths[0].key);
-                setYear(availablePaymentMonths[0].year.toString());
+                return [...prevSelected, monthKey];
             }
-        } else if (!isLoading && availablePaymentMonths.length > 0 && !month) {
-            // Select first available month by default
-            setMonth(availablePaymentMonths[0].key);
-            setYear(availablePaymentMonths[0].year.toString());
-        }
-    }, [isLoading, availablePaymentMonths, initialMonth, initialYear]); // Removed month from dependencies to avoid loop
+        });
+    };
 
-    // Update amount when monthly fee or partial status changes
-    useEffect(() => {
-        if (!isPartial) {
-            setAmount(monthlyFee.toString())
-        }
-    }, [isPartial, monthlyFee])
+    // Get selected month details
+    const selectedMonthsData = useMemo(() => {
+        return availableMonths
+            .filter(month => selectedMonths.includes(month.key))
+            .sort((a, b) => {
+                // Sort by year then month
+                if (a.year !== b.year) return a.year - b.year;
+                return a.month - b.month;
+            });
+    }, [selectedMonths, availableMonths]);
 
     // Generate receipt number
     const generateReceiptNumber = () => {
@@ -261,18 +268,13 @@ export default function PaymentForm({
         return `R${year}${month}${day}-${random}`
     }
 
-    // Find selected month details
-    const selectedMonthData = useMemo(() => {
-        return availableMonths.find(m => m.key === month);
-    }, [month, availableMonths]);
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        if (!month || !amount || !year) {
+        if (selectedMonths.length === 0 || !amount) {
             toast({
                 title: 'Validation Error',
-                description: 'Please fill out all required fields.',
+                description: 'Please select at least one month and provide a payment amount.',
                 variant: 'destructive',
             })
             return
@@ -289,33 +291,38 @@ export default function PaymentForm({
             return
         }
 
-        // For non-partial payments, ensure amount matches fee
-        if (!isPartial && paymentAmount !== monthlyFee) {
+        // For non-partial payments, ensure amount matches expected total
+        const expectedTotal = selectedMonths.length * monthlyFee;
+        if (!isPartial && paymentAmount !== expectedTotal) {
             setIsPartial(true)
         }
 
         setIsSubmitting(true)
 
         try {
-            // Extract month and year from selected key
-            const selectedMonth = selectedMonthData?.month;
-            const selectedYear = selectedMonthData?.year;
+            // Create an array of month data for the API request
+            const monthsData = selectedMonthsData.map(month => ({
+                month: month.month,
+                year: month.year,
+                fee: month.fee
+            }));
 
-            if (!selectedMonth || !selectedYear) {
-                throw new Error('Invalid month selection');
-            }
+            // Generate a single receipt number for all payments
+            const receiptNumber = generateReceiptNumber();
 
             const paymentData = {
                 studentId: student.id,
                 amount: paymentAmount,
                 paymentMethod,
-                forMonth: selectedMonth,
-                forYear: selectedYear,
+                months: monthsData,
                 schoolYearId: activeSchoolYear.id,
                 clerkId,
-                receiptNumber: generateReceiptNumber(),
-                isPartial: isPartial || paymentAmount < monthlyFee,
+                receiptNumber,
+                isPartial: isPartial || paymentAmount < expectedTotal,
                 notes: notes || null,
+                // Add these fields to satisfy single-month validation
+                forMonth: selectedMonthsData.length > 0 ? selectedMonthsData[0].month : null,
+                forYear: selectedMonthsData.length > 0 ? selectedMonthsData[0].year : null
             }
 
             const response = await fetch('/api/payments', {
@@ -338,8 +345,8 @@ export default function PaymentForm({
                 description: `Payment of ${formatCurrency(paymentAmount)} for ${student.name} has been recorded successfully.`,
             })
 
-            // Redirect to payment receipt or student detail
-            router.push(`/payments/${result.id}/receipt`)
+            // Redirect to payment receipt
+            router.push(`/payments/${result.payment.id}/receipt`)
             router.refresh()
         } catch (error) {
             toast({
@@ -435,37 +442,42 @@ export default function PaymentForm({
                         </RadioGroup>
                     </div>
 
-                    {/* Month and Year Selection */}
+                    {/* Month Selection */}
                     <div className="space-y-3">
-                        <Label htmlFor="month">Month *</Label>
+                        <div className="flex items-center justify-between">
+                            <Label>Select Months to Pay *</Label>
+                            <div className="text-xs text-muted-foreground">
+                                {selectedMonths.length} month{selectedMonths.length !== 1 ? 's' : ''} selected
+                            </div>
+                        </div>
+
                         {isLoading ? (
-                            <div className="h-9 w-full rounded-md border bg-muted animate-pulse" />
+                            <div className="h-[200px] w-full rounded-md border bg-muted animate-pulse" />
                         ) : availablePaymentMonths.length > 0 ? (
-                            <Select
-                                value={month}
-                                onValueChange={setMonth}
-                                required
-                            >
-                                <SelectTrigger id="month">
-                                    <SelectValue placeholder="Select month" />
-                                </SelectTrigger>
-                                <SelectContent>
+                            <div className="max-h-[300px] overflow-y-auto rounded-md border p-4">
+                                <div className="space-y-2">
                                     {availablePaymentMonths.map((monthData) => (
-                                        <SelectItem
-                                            key={monthData.key}
-                                            value={monthData.key}
-                                            className="flex items-center justify-between"
-                                        >
-                                            <div className="flex items-center gap-2">
+                                        <div key={monthData.key} className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id={`month-${monthData.key}`}
+                                                checked={selectedMonths.includes(monthData.key)}
+                                                onCheckedChange={() => toggleMonth(monthData.key)}
+                                            />
+                                            <Label
+                                                htmlFor={`month-${monthData.key}`}
+                                                className="flex items-center cursor-pointer"
+                                            >
+                                                <span className="flex-1">
+                                                    {formatMonth(monthData.month)} {monthData.year}
+                                                </span>
                                                 {monthData.status === 'partial' && (
-                                                    <Badge variant="secondary" className="mr-2">Partial</Badge>
+                                                    <Badge variant="secondary" className="ml-2">Partial</Badge>
                                                 )}
-                                                {monthData.label}
-                                            </div>
-                                        </SelectItem>
+                                            </Label>
+                                        </div>
                                     ))}
-                                </SelectContent>
-                            </Select>
+                                </div>
+                            </div>
                         ) : (
                             <div className="rounded-md border p-3 bg-green-50 text-green-800 flex items-center">
                                 <Check className="mr-2 h-4 w-4" />
@@ -473,6 +485,28 @@ export default function PaymentForm({
                             </div>
                         )}
                     </div>
+
+                    {/* Selected Month Summary */}
+                    {selectedMonths.length > 0 && (
+                        <div className="rounded-md border p-4 bg-secondary/20">
+                            <h4 className="font-medium text-sm mb-2 flex items-center">
+                                <Calendar className="h-4 w-4 mr-2" />
+                                Payment Summary
+                            </h4>
+                            <div className="space-y-1 text-sm">
+                                {selectedMonthsData.map(month => (
+                                    <div key={month.key} className="flex justify-between">
+                                        <span>{formatMonth(month.month)} {month.year}</span>
+                                        <span>{formatCurrency(month.fee)}</span>
+                                    </div>
+                                ))}
+                                <div className="flex justify-between font-bold pt-2 border-t mt-2">
+                                    <span>Total</span>
+                                    <span>{formatCurrency(selectedMonths.length * monthlyFee)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Partial Payment Toggle */}
                     <div className="flex items-center space-x-2">
@@ -494,7 +528,7 @@ export default function PaymentForm({
                                 type="number"
                                 step="0.01"
                                 min="0.01"
-                                max={isPartial ? undefined : monthlyFee}
+                                max={isPartial ? undefined : selectedMonths.length * monthlyFee}
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
                                 className="pl-8"
@@ -505,7 +539,7 @@ export default function PaymentForm({
                         <div className="text-sm text-muted-foreground">
                             {isPartial ?
                                 "Enter the partial amount being paid." :
-                                `Full payment amount: ${formatCurrency(monthlyFee)}`
+                                `Full payment amount: ${formatCurrency(selectedMonths.length * monthlyFee)}`
                             }
                         </div>
                     </div>
@@ -540,7 +574,11 @@ export default function PaymentForm({
                             <div className="grid grid-cols-2">
                                 <span className="text-muted-foreground">Period:</span>
                                 <span>
-                                    {selectedMonthData ? formatMonthYear(selectedMonthData) : "--"}
+                                    {selectedMonthsData.length ?
+                                        selectedMonthsData.length > 1 ?
+                                            `Multiple months (${selectedMonthsData.length})` :
+                                            formatMonthYear(selectedMonthsData[0])
+                                        : "--"}
                                 </span>
                             </div>
                             <div className="grid grid-cols-2">
@@ -564,7 +602,7 @@ export default function PaymentForm({
                     </Button>
                     <Button
                         type="submit"
-                        disabled={isSubmitting || availablePaymentMonths.length === 0}
+                        disabled={isSubmitting || selectedMonths.length === 0}
                     >
                         {isSubmitting ? 'Processing...' : 'Record Payment'}
                     </Button>

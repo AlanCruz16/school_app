@@ -49,39 +49,13 @@ export async function POST(request: NextRequest) {
         } else {
             // Validate multi-month data
             if (!data.studentId || !data.amount || !data.paymentMethod ||
-                !data.schoolYearId || !data.clerkId || !data.receiptNumber ||
-                !data.months || !Array.isArray(data.months) || data.months.length === 0) {
-
-                console.error('Missing required fields for multi-month payment:', {
-                    studentId: !!data.studentId,
-                    amount: !!data.amount,
-                    paymentMethod: !!data.paymentMethod,
-                    schoolYearId: !!data.schoolYearId,
-                    clerkId: !!data.clerkId,
-                    receiptNumber: !!data.receiptNumber,
-                    months: !!data.months,
-                    monthsIsArray: Array.isArray(data.months),
-                    monthsLength: data.months ? data.months.length : 0
-                });
-
+                !data.schoolYearId || !data.clerkId || !data.receiptNumber || !data.months || !data.months.length) {
                 return new NextResponse(JSON.stringify({
                     error: 'Missing required fields for multi-month payment'
                 }), {
                     status: 400,
                     headers: { 'Content-Type': 'application/json' },
                 })
-            }
-
-            // Validate each month in the array
-            for (const monthData of data.months) {
-                if (!monthData.month || monthData.month < 1 || monthData.month > 12 || !monthData.year) {
-                    return new NextResponse(JSON.stringify({
-                        error: 'Invalid month or year in months array'
-                    }), {
-                        status: 400,
-                        headers: { 'Content-Type': 'application/json' },
-                    })
-                }
             }
         }
 
@@ -157,7 +131,7 @@ export async function POST(request: NextRequest) {
                             forYear: year,
                             schoolYearId: data.schoolYearId,
                             clerkId: data.clerkId,
-                            receiptNumber: `${data.receiptNumber}-${month}-${year}`, // Make each receipt number unique
+                            receiptNumber: data.receiptNumber, // Same receipt number for all
                             isPartial: isPartial,
                             notes: data.notes,
                         },

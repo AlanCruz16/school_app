@@ -15,6 +15,7 @@ interface PaymentDetails {
     paymentDate: string | Date
     paymentMethod: string
     forMonth: number
+    forYear?: number
     isPartial: boolean
     notes?: string | null
     student: {
@@ -30,6 +31,7 @@ interface PaymentDetails {
     clerk: {
         name: string
     }
+    relatedPayments?: PaymentDetails[]  // Add this for multiple month payments
 }
 
 interface ReceiptProps {
@@ -51,6 +53,12 @@ const Receipt = ({
 }: ReceiptProps) => {
     const receiptRef = useRef<HTMLDivElement>(null)
 
+    // Extract the base receipt number
+    const baseReceiptNumber = payment.receiptNumber.split('-')[0];
+
+    // Check if this is a multi-month payment
+    const isMultiMonthPayment = payment.relatedPayments && Array.isArray(payment.relatedPayments) && payment.relatedPayments.length > 0;
+
     const printReceipt = () => {
         const printWindow = window.open('', '', 'width=800,height=600')
         if (!printWindow) return
@@ -61,7 +69,7 @@ const Receipt = ({
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Payment Receipt #${payment.receiptNumber}</title>
+                <title>Payment Receipt #${baseReceiptNumber}</title>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1">
                 <style>
@@ -153,6 +161,32 @@ const Receipt = ({
                             display: none !important;
                         }
                     }
+
+                    /* Table styles for payment breakdown */
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin: 8px 0;
+                        font-size: 12px;
+                    }
+                    
+                    table th, table td {
+                        padding: 4px;
+                        text-align: left;
+                        border-bottom: 1px solid #eee;
+                    }
+                    
+                    table th {
+                        font-weight: bold;
+                    }
+                    
+                    table tr:last-child td {
+                        border-bottom: none;
+                    }
+                    
+                    .text-right {
+                        text-align: right;
+                    }
                 </style>
             </head>
             <body>
@@ -187,14 +221,42 @@ const Receipt = ({
             parseFloat(payment.student.grade.tuitionAmount) :
             payment.student.grade.tuitionAmount)
 
-    const balanceRemaining = payment.isPartial ? tuitionAmount - paymentAmount : 0
+    // Calculate total amount from all related payments if present
+    const totalAmount = isMultiMonthPayment && Array.isArray(payment.relatedPayments)
+        ? paymentAmount + payment.relatedPayments.reduce((sum, p) => {
+            const amount = typeof p.amount === 'object'
+                ? parseFloat(p.amount.toString())
+                : (typeof p.amount === 'string'
+                    ? parseFloat(p.amount)
+                    : p.amount);
+            return sum + amount;
+        }, 0)
+        : paymentAmount;
+
+    // Get all payments (current + related) for display
+    const allPayments = isMultiMonthPayment && Array.isArray(payment.relatedPayments)
+        ? [payment, ...payment.relatedPayments]
+        : [payment];
+
+    // Sort payments by month/year
+    const sortedPayments = [...allPayments].sort((a, b) => {
+        // If we have years, compare years first
+        if (a.forYear !== undefined && b.forYear !== undefined) {
+            if (a.forYear !== b.forYear) return a.forYear - b.forYear;
+        }
+        // Then compare months
+        return a.forMonth - b.forMonth;
+    });
+
+    // Calculate balance remaining for partial payments
+    const balanceRemaining = payment.isPartial ? tuitionAmount - paymentAmount : 0;
 
     return (
         <div>
             <AutoPrintReceipt printFunction={printReceipt} />
 
             <div className="print:hidden mb-4 flex justify-between">
-                <h1 className="text-xl font-bold">Receipt #{payment.receiptNumber}</h1>
+                <h1 className="text-xl font-bold">Receipt #{baseReceiptNumber}</h1>
                 <Button variant="outline" onClick={printReceipt}>
                     <Printer className="mr-2 h-4 w-4" />
                     Print Receipt
@@ -229,7 +291,7 @@ const Receipt = ({
                     <div className="receipt-info space-y-1 text-sm">
                         <div>
                             <span className="label">Receipt #:</span>
-                            <span>{payment.receiptNumber}</span>
+                            <span>{baseReceiptNumber}</span>
                         </div>
                         <div>
                             <span className="label">Date:</span>
@@ -248,10 +310,6 @@ const Receipt = ({
                             <span>{payment.schoolYear.name}</span>
                         </div>
                         <div>
-                            <span className="label">Month:</span>
-                            <span>{formatMonth(payment.forMonth)}</span>
-                        </div>
-                        <div>
                             <span className="label">Payment Method:</span>
                             <span>{payment.paymentMethod}</span>
                         </div>
@@ -260,7 +318,38 @@ const Receipt = ({
                             <span>{payment.isPartial ? 'Partial Payment' : 'Full Payment'}</span>
                         </div>
 
-                        {payment.isPartial && (
+                        {/* Payment breakdown table for multiple months */}
+                        {isMultiMonthPayment && (
+                            <div className="mt-2 w-full">
+                                <div className="label mb-1">Payment Breakdown:</div>
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Month</th>
+                                            <th className="text-right">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {sortedPayments.map((p, index) => (
+                                            <tr key={index}>
+                                                <td>{formatMonth(p.forMonth)} {p.forYear}</td>
+                                                <td className="text-right">
+                                                    {formatCurrency(
+                                                        typeof p.amount === 'object'
+                                                            ? parseFloat(p.amount.toString())
+                                                            : (typeof p.amount === 'string'
+                                                                ? parseFloat(p.amount)
+                                                                : p.amount)
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+
+                        {payment.isPartial && !isMultiMonthPayment && (
                             <>
                                 <div>
                                     <span className="label">Monthly Fee:</span>
@@ -284,7 +373,7 @@ const Receipt = ({
                     {/* Receipt Total */}
                     <div className="receipt-total border-t border-dashed pt-2 mt-3 font-bold">
                         <span>TOTAL PAID:</span>
-                        <span>{formatCurrency(paymentAmount)}</span>
+                        <span>{formatCurrency(totalAmount)}</span>
                     </div>
 
                     {/* Receipt Footer */}
