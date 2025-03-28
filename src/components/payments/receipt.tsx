@@ -330,20 +330,31 @@ const Receipt = ({
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {sortedPayments.map((p, index) => (
-                                            <tr key={index}>
-                                                <td>{formatMonth(p.forMonth)} {p.forYear}</td>
-                                                <td className="text-right">
-                                                    {formatCurrency(
-                                                        typeof p.amount === 'object'
-                                                            ? parseFloat(p.amount.toString())
-                                                            : (typeof p.amount === 'string'
-                                                                ? parseFloat(p.amount)
-                                                                : p.amount)
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))}
+                                        {/* Add filters and de-duplication */}
+                                        {sortedPayments
+                                            // Create a unique key for each month/year combination
+                                            .filter((p, index, self) => {
+                                                const key = `${p.forMonth}-${p.forYear || ''}`;
+                                                // Keep only the first occurrence of each month/year
+                                                return index === self.findIndex(t =>
+                                                    `${t.forMonth}-${t.forYear || ''}` === key
+                                                );
+                                            })
+                                            .map((p, index) => (
+                                                <tr key={`payment-${index}-${p.forMonth}-${p.forYear || ''}`}>
+                                                    <td>{formatMonth(p.forMonth)} {p.forYear}</td>
+                                                    <td className="text-right">
+                                                        {formatCurrency(
+                                                            typeof p.amount === 'object'
+                                                                ? parseFloat(p.amount.toString())
+                                                                : (typeof p.amount === 'string'
+                                                                    ? parseFloat(p.amount)
+                                                                    : p.amount)
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        }
                                     </tbody>
                                 </table>
                             </div>

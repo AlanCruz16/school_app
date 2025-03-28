@@ -24,6 +24,10 @@ import { useToast } from '@/components/ui/use-toast'
 import { formatCurrency, formatMonth } from '@/lib/utils/format'
 import { getAllSchoolYearMonths, formatMonthYear } from '@/lib/utils/balance'
 import { Check, AlertCircle, Calendar } from 'lucide-react'
+import { distributePayment } from '@/lib/utils/balance'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { CreditCard, DollarSign } from 'lucide-react'
+
 
 interface Student {
     id: string
@@ -102,6 +106,8 @@ export default function PaymentForm({
     const [amount, setAmount] = useState(monthlyFee.toString())
     const [notes, setNotes] = useState('')
     const [payments, setPayments] = useState<Payment[]>(studentPayments || [])
+    const [paymentMode, setPaymentMode] = useState<'specific' | 'bulk'>('specific')
+    const [bulkPreviewExpanded, setBulkPreviewExpanded] = useState(false)
 
     // Initialize payments from studentPayments on first render only
     useEffect(() => {
@@ -163,6 +169,58 @@ export default function PaymentForm({
             };
         });
     }, [activeSchoolYear, payments, monthlyFee]);
+
+    // Calculate bulk payment distribution
+    const unpaidMonthsForDistribution = availableMonths
+        .filter(month => month.status !== 'paid')
+        .map(month => {
+            // Find any payments for this month (to calculate already paid amount)
+            const monthPayments = payments.filter(payment => {
+                if (payment.forYear) {
+                    return payment.forMonth === month.month &&
+                        payment.forYear === month.year &&
+                        payment.schoolYearId === activeSchoolYear.id;
+                } else {
+                    return payment.forMonth === month.month &&
+                        payment.schoolYearId === activeSchoolYear.id;
+                }
+            });
+
+            // Calculate amount already paid for this month
+            const paidAmount = monthPayments.reduce((sum, payment) => {
+                const amount = typeof payment.amount === 'object'
+                    ? parseFloat(payment.amount.toString())
+                    : typeof payment.amount === 'string'
+                        ? parseFloat(payment.amount)
+                        : payment.amount;
+                return sum + amount;
+            }, 0);
+
+            return {
+                monthYear: {
+                    month: month.month,
+                    year: month.year,
+                    key: month.key
+                },
+                status: month.status as 'paid' | 'partial' | 'unpaid',
+                expectedAmount: monthlyFee,
+                paidAmount
+            };
+        });
+
+    // Calculate total unpaid amount
+    const totalUnpaidAmount = unpaidMonthsForDistribution.reduce(
+        (sum, month) => sum + (month.expectedAmount - (month.paidAmount || 0)),
+        0
+    );
+
+    // Calculate distribution based on current payment amount
+    const paymentDistribution = useMemo(() => {
+        const paymentVal = parseFloat(amount) || 0;
+        if (paymentVal <= 0) return [];
+
+        return distributePayment(paymentVal, unpaidMonthsForDistribution);
+    }, [amount, unpaidMonthsForDistribution]);
 
     // Get unpaid and partially paid months
     const availablePaymentMonths = useMemo(() => {
@@ -271,10 +329,20 @@ export default function PaymentForm({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        if (selectedMonths.length === 0 || !amount) {
+        // Validate based on payment mode
+        if (paymentMode === 'specific' && selectedMonths.length === 0) {
             toast({
                 title: 'Validation Error',
-                description: 'Please select at least one month and provide a payment amount.',
+                description: 'Please select at least one month for payment.',
+                variant: 'destructive',
+            })
+            return
+        }
+
+        if (!amount) {
+            toast({
+                title: 'Validation Error',
+                description: 'Please enter a payment amount.',
                 variant: 'destructive',
             })
             return
@@ -291,38 +359,67 @@ export default function PaymentForm({
             return
         }
 
-        // For non-partial payments, ensure amount matches expected total
-        const expectedTotal = selectedMonths.length * monthlyFee;
-        if (!isPartial && paymentAmount !== expectedTotal) {
-            setIsPartial(true)
+        // For non-partial payments in specific mode, ensure amount matches expected total
+        if (paymentMode === 'specific' && !isPartial) {
+            const expectedTotal = selectedMonths.length * monthlyFee;
+            if (paymentAmount !== expectedTotal) {
+                setIsPartial(true)
+            }
         }
 
         setIsSubmitting(true)
 
         try {
-            // Create an array of month data for the API request
-            const monthsData = selectedMonthsData.map(month => ({
-                month: month.month,
-                year: month.year,
-                fee: month.fee
-            }));
-
             // Generate a single receipt number for all payments
             const receiptNumber = generateReceiptNumber();
 
-            const paymentData = {
-                studentId: student.id,
-                amount: paymentAmount,
-                paymentMethod,
-                months: monthsData,
-                schoolYearId: activeSchoolYear.id,
-                clerkId,
-                receiptNumber,
-                isPartial: isPartial || paymentAmount < expectedTotal,
-                notes: notes || null,
-                // Add these fields to satisfy single-month validation
-                forMonth: selectedMonthsData.length > 0 ? selectedMonthsData[0].month : null,
-                forYear: selectedMonthsData.length > 0 ? selectedMonthsData[0].year : null
+            let paymentData;
+
+            if (paymentMode === 'specific') {
+                // Specific month payment mode - similar to existing code
+                const monthsData = selectedMonthsData.map(month => ({
+                    month: month.month,
+                    year: month.year,
+                    fee: month.fee
+                }));
+
+                paymentData = {
+                    studentId: student.id,
+                    amount: paymentAmount,
+                    paymentMethod,
+                    months: monthsData,
+                    schoolYearId: activeSchoolYear.id,
+                    clerkId,
+                    receiptNumber,
+                    isPartial: isPartial || paymentAmount < (selectedMonths.length * monthlyFee),
+                    notes: notes || null,
+                    // Add these fields to satisfy single-month validation
+                    forMonth: selectedMonthsData.length > 0 ? selectedMonthsData[0].month : null,
+                    forYear: selectedMonthsData.length > 0 ? selectedMonthsData[0].year : null
+                }
+            } else {
+                // Bulk payment mode - use distribution calculation
+                const monthsData = paymentDistribution.map(allocation => ({
+                    month: allocation.monthYear.month,
+                    year: allocation.monthYear.year,
+                    fee: monthlyFee,
+                    // Include allocation amount to ensure API knows how to distribute
+                    allocation: allocation.amount
+                }));
+
+                paymentData = {
+                    studentId: student.id,
+                    amount: paymentAmount,
+                    paymentMethod,
+                    months: monthsData,
+                    schoolYearId: activeSchoolYear.id,
+                    clerkId,
+                    receiptNumber,
+                    isPartial: paymentAmount < totalUnpaidAmount,
+                    notes: notes || null,
+                    // Flag to indicate bulk payment mode
+                    isBulkPayment: true
+                }
             }
 
             const response = await fetch('/api/payments', {
@@ -442,71 +539,192 @@ export default function PaymentForm({
                         </RadioGroup>
                     </div>
 
-                    {/* Month Selection */}
+                    {/* Payment Mode Selection */}
                     <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                            <Label>Select Months to Pay *</Label>
-                            <div className="text-xs text-muted-foreground">
-                                {selectedMonths.length} month{selectedMonths.length !== 1 ? 's' : ''} selected
-                            </div>
-                        </div>
+                        <Label>Payment Mode</Label>
+                        <Tabs
+                            value={paymentMode}
+                            onValueChange={(value) => setPaymentMode(value as 'specific' | 'bulk')}
+                            className="w-full"
+                        >
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="specific" className="flex items-center gap-2">
+                                    <Calendar className="h-4 w-4" />
+                                    <span>Specific Months</span>
+                                </TabsTrigger>
+                                <TabsTrigger value="bulk" className="flex items-center gap-2">
+                                    <DollarSign className="h-4 w-4" />
+                                    <span>Bulk Payment</span>
+                                </TabsTrigger>
+                            </TabsList>
 
-                        {isLoading ? (
-                            <div className="h-[200px] w-full rounded-md border bg-muted animate-pulse" />
-                        ) : availablePaymentMonths.length > 0 ? (
-                            <div className="max-h-[300px] overflow-y-auto rounded-md border p-4">
-                                <div className="space-y-2">
-                                    {availablePaymentMonths.map((monthData) => (
-                                        <div key={monthData.key} className="flex items-center space-x-2">
-                                            <Checkbox
-                                                id={`month-${monthData.key}`}
-                                                checked={selectedMonths.includes(monthData.key)}
-                                                onCheckedChange={() => toggleMonth(monthData.key)}
-                                            />
-                                            <Label
-                                                htmlFor={`month-${monthData.key}`}
-                                                className="flex items-center cursor-pointer"
-                                            >
-                                                <span className="flex-1">
-                                                    {formatMonth(monthData.month)} {monthData.year}
-                                                </span>
-                                                {monthData.status === 'partial' && (
-                                                    <Badge variant="secondary" className="ml-2">Partial</Badge>
-                                                )}
-                                            </Label>
+                            <TabsContent value="specific" className="mt-4">
+                                {/* Month Selection - existing UI */}
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <Label>Select Months to Pay *</Label>
+                                        <div className="text-xs text-muted-foreground">
+                                            {selectedMonths.length} month{selectedMonths.length !== 1 ? 's' : ''} selected
                                         </div>
-                                    ))}
+                                    </div>
+
+                                    {isLoading ? (
+                                        <div className="h-[200px] w-full rounded-md border bg-muted animate-pulse" />
+                                    ) : availablePaymentMonths.length > 0 ? (
+                                        <div className="max-h-[300px] overflow-y-auto rounded-md border p-4">
+                                            <div className="space-y-2">
+                                                {availablePaymentMonths.map((monthData) => (
+                                                    <div key={monthData.key} className="flex items-center space-x-2">
+                                                        <Checkbox
+                                                            id={`month-${monthData.key}`}
+                                                            checked={selectedMonths.includes(monthData.key)}
+                                                            onCheckedChange={() => toggleMonth(monthData.key)}
+                                                        />
+                                                        <Label
+                                                            htmlFor={`month-${monthData.key}`}
+                                                            className="flex items-center cursor-pointer"
+                                                        >
+                                                            <span className="flex-1">
+                                                                {formatMonth(monthData.month)} {monthData.year}
+                                                            </span>
+                                                            {monthData.status === 'partial' && (
+                                                                <Badge variant="secondary" className="ml-2">Partial</Badge>
+                                                            )}
+                                                        </Label>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="rounded-md border p-3 bg-green-50 text-green-800 flex items-center">
+                                            <Check className="mr-2 h-4 w-4" />
+                                            <span>All months for this school year have been fully paid.</span>
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="rounded-md border p-3 bg-green-50 text-green-800 flex items-center">
-                                <Check className="mr-2 h-4 w-4" />
-                                <span>All months for this school year have been fully paid.</span>
-                            </div>
-                        )}
+
+                                {/* Selected Month Summary - existing code */}
+                                {selectedMonths.length > 0 && (
+                                    <div className="rounded-md border p-4 bg-secondary/20 mt-4">
+                                        <h4 className="font-medium text-sm mb-2 flex items-center">
+                                            <Calendar className="h-4 w-4 mr-2" />
+                                            Payment Summary
+                                        </h4>
+                                        <div className="space-y-1 text-sm">
+                                            {selectedMonthsData.map(month => (
+                                                <div key={month.key} className="flex justify-between">
+                                                    <span>{formatMonth(month.month)} {month.year}</span>
+                                                    <span>{formatCurrency(month.fee)}</span>
+                                                </div>
+                                            ))}
+                                            <div className="flex justify-between font-bold pt-2 border-t mt-2">
+                                                <span>Total</span>
+                                                <span>{formatCurrency(selectedMonths.length * monthlyFee)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </TabsContent>
+
+                            <TabsContent value="bulk" className="mt-4">
+                                {/* Bulk Payment UI */}
+                                <div className="space-y-4">
+                                    <div className="rounded-md border p-4">
+                                        <h4 className="font-medium mb-2 flex items-center">
+                                            <DollarSign className="h-4 w-4 mr-2" />
+                                            Bulk Payment
+                                        </h4>
+
+                                        <p className="text-sm text-muted-foreground mb-3">
+                                            Make a payment without selecting specific months. The system will automatically distribute the payment to oldest unpaid months first.
+                                        </p>
+
+                                        {unpaidMonthsForDistribution.length === 0 ? (
+                                            <div className="rounded-md border p-3 bg-green-50 text-green-800 flex items-center">
+                                                <Check className="mr-2 h-4 w-4" />
+                                                <span>All months for this school year have been fully paid.</span>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className="flex justify-between items-center text-sm font-medium py-2 border-b">
+                                                    <span>Total outstanding balance:</span>
+                                                    <span className="text-destructive font-bold">{formatCurrency(totalUnpaidAmount)}</span>
+                                                </div>
+
+                                                <div className="mt-3">
+                                                    <Label htmlFor="bulkAmount">Payment Amount *</Label>
+                                                    <div className="relative mt-1">
+                                                        <span className="absolute left-3 top-2.5">$</span>
+                                                        <Input
+                                                            id="bulkAmount"
+                                                            type="number"
+                                                            step="0.01"
+                                                            min="0.01"
+                                                            max={totalUnpaidAmount}
+                                                            value={amount}
+                                                            onChange={(e) => setAmount(e.target.value)}
+                                                            className="pl-8"
+                                                        />
+                                                    </div>
+                                                </div>
+
+
+                                                {/* Payment distribution preview */}
+                                                {parseFloat(amount) > 0 && (
+                                                    <div className="mt-4">
+                                                        <div
+                                                            className="flex justify-between items-center cursor-pointer"
+                                                            onClick={(e) => {
+                                                                e.preventDefault(); // Add this line
+                                                                setBulkPreviewExpanded(!bulkPreviewExpanded);
+                                                            }}
+                                                        >
+                                                            <h5 className="font-medium text-sm">Payment Distribution Preview</h5>
+                                                            <Button type="button" variant="ghost" size="sm" className="h-6 px-2">
+                                                                {bulkPreviewExpanded ? 'Hide' : 'Show'} Details
+                                                            </Button>
+                                                        </div>
+
+                                                        {bulkPreviewExpanded && (
+                                                            <div className="mt-2 space-y-1 text-sm max-h-[200px] overflow-y-auto border rounded-md p-2">
+                                                                {paymentDistribution.length > 0 ? (
+                                                                    <>
+                                                                        {paymentDistribution.map(allocation => (
+                                                                            <div key={allocation.monthYear.key} className="flex justify-between items-center py-1 border-b last:border-0">
+                                                                                <span>{formatMonth(allocation.monthYear.month)} {allocation.monthYear.year}</span>
+                                                                                <div className="flex flex-col items-end">
+                                                                                    <span>{formatCurrency(allocation.amount)}</span>
+                                                                                    {allocation.isPartial && (
+                                                                                        <span className="text-xs text-yellow-600">Partial</span>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </>
+                                                                ) : (
+                                                                    <div className="text-center py-2 text-muted-foreground">
+                                                                        Enter a payment amount to see distribution
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {parseFloat(amount) > 0 && parseFloat(amount) < totalUnpaidAmount && (
+                                        <div className="rounded-md border p-3 bg-yellow-50 text-yellow-700 flex items-center text-sm">
+                                            <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                                            <span>This amount will partially pay some months. The oldest unpaid months will be prioritized.</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </TabsContent>
+                        </Tabs>
                     </div>
 
-                    {/* Selected Month Summary */}
-                    {selectedMonths.length > 0 && (
-                        <div className="rounded-md border p-4 bg-secondary/20">
-                            <h4 className="font-medium text-sm mb-2 flex items-center">
-                                <Calendar className="h-4 w-4 mr-2" />
-                                Payment Summary
-                            </h4>
-                            <div className="space-y-1 text-sm">
-                                {selectedMonthsData.map(month => (
-                                    <div key={month.key} className="flex justify-between">
-                                        <span>{formatMonth(month.month)} {month.year}</span>
-                                        <span>{formatCurrency(month.fee)}</span>
-                                    </div>
-                                ))}
-                                <div className="flex justify-between font-bold pt-2 border-t mt-2">
-                                    <span>Total</span>
-                                    <span>{formatCurrency(selectedMonths.length * monthlyFee)}</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
                     {/* Partial Payment Toggle */}
                     <div className="flex items-center space-x-2">
@@ -528,22 +746,30 @@ export default function PaymentForm({
                                 type="number"
                                 step="0.01"
                                 min="0.01"
-                                max={isPartial ? undefined : selectedMonths.length * monthlyFee}
+                                max={
+                                    paymentMode === 'bulk'
+                                        ? (totalUnpaidAmount > 0 ? totalUnpaidAmount : undefined)
+                                        : (isPartial ? undefined : selectedMonths.length * monthlyFee)
+                                }
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
                                 className="pl-8"
-                                disabled={!isPartial && availablePaymentMonths.length === 0}
+                                disabled={
+                                    (paymentMode === 'specific' && !isPartial && availablePaymentMonths.length === 0) ||
+                                    (paymentMode === 'bulk' && unpaidMonthsForDistribution.length === 0)
+                                }
                                 required
                             />
                         </div>
                         <div className="text-sm text-muted-foreground">
-                            {isPartial ?
-                                "Enter the partial amount being paid." :
-                                `Full payment amount: ${formatCurrency(selectedMonths.length * monthlyFee)}`
+                            {paymentMode === 'bulk'
+                                ? `Maximum payment: ${formatCurrency(totalUnpaidAmount)}`
+                                : (isPartial
+                                    ? "Enter the partial amount being paid."
+                                    : `Full payment amount: ${formatCurrency(selectedMonths.length * monthlyFee)}`)
                             }
                         </div>
                     </div>
-
                     {/* Notes */}
                     <div className="space-y-3">
                         <Label htmlFor="notes">Notes (optional)</Label>
@@ -602,12 +828,20 @@ export default function PaymentForm({
                     </Button>
                     <Button
                         type="submit"
-                        disabled={isSubmitting || selectedMonths.length === 0}
+                        disabled={
+                            isSubmitting ||
+                            (paymentMode === 'specific' && selectedMonths.length === 0) ||
+                            (paymentMode === 'bulk' && (
+                                parseFloat(amount) <= 0 ||
+                                unpaidMonthsForDistribution.length === 0
+                            ))
+                        }
                     >
                         {isSubmitting ? 'Processing...' : 'Record Payment'}
                     </Button>
                 </CardFooter>
             </Card>
+
         </form>
     )
 }

@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
 
         // Check if this is a multi-month payment
         const isMultiMonth = Array.isArray(data.months) && data.months.length > 0;
+        const isBulkPayment = data.isBulkPayment === true;
 
         // Standard validation for single month payment
         if (!isMultiMonth) {
@@ -84,6 +85,46 @@ export async function POST(request: NextRequest) {
                 }
             }
         }
+        if (isBulkPayment) {
+            // Validate bulk payment data
+            if (!data.studentId || !data.amount || !data.paymentMethod ||
+                !data.schoolYearId || !data.clerkId || !data.receiptNumber ||
+                !data.months || !Array.isArray(data.months) || data.months.length === 0) {
+
+                console.error('Missing required fields for bulk payment:', {
+                    studentId: !!data.studentId,
+                    amount: !!data.amount,
+                    paymentMethod: !!data.paymentMethod,
+                    schoolYearId: !!data.schoolYearId,
+                    clerkId: !!data.clerkId,
+                    receiptNumber: !!data.receiptNumber,
+                    months: !!data.months,
+                    monthsIsArray: Array.isArray(data.months),
+                    monthsLength: data.months ? data.months.length : 0
+                });
+
+                return new NextResponse(JSON.stringify({
+                    error: 'Missing required fields for bulk payment'
+                }), {
+                    status: 400,
+                    headers: { 'Content-Type': 'application/json' },
+                });
+            }
+
+            // Validate each month has allocation data
+            for (const monthData of data.months) {
+                if (!monthData.month || monthData.month < 1 || monthData.month > 12 ||
+                    !monthData.year || !monthData.allocation) {
+                    return new NextResponse(JSON.stringify({
+                        error: 'Invalid month, year, or allocation in months array'
+                    }), {
+                        status: 400,
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+                }
+            }
+        }
+
 
         // Get student to update balance
         const student = await prisma.student.findUnique({
@@ -104,7 +145,7 @@ export async function POST(request: NextRequest) {
             const currentBalance = parseFloat(student.balance.toString());
             const newBalance = Math.max(currentBalance - paymentAmount, 0); // Don't go below zero
 
-            if (!isMultiMonth) {
+            if (!isMultiMonth && !isBulkPayment) {
                 // Single month payment
                 const newPayment = await prisma.payment.create({
                     data: {
@@ -121,9 +162,12 @@ export async function POST(request: NextRequest) {
                     },
                 });
                 payments.push(newPayment);
-            } else {
-                // Multi-month payment - create a payment record for each month
-                const totalMonthlyFees = data.months.reduce((sum: number, monthData: any) => sum + (monthData.fee || 0), 0);
+            } else if (isMultiMonth) {
+                // Multi-month payment (existing code)
+                let totalMonthlyFees = 0;
+                for (const monthData of data.months) {
+                    totalMonthlyFees += (monthData.fee || 0);
+                }
                 let remainingAmount = paymentAmount;
                 const isDistributionNeeded = paymentAmount < totalMonthlyFees;
 
@@ -167,6 +211,37 @@ export async function POST(request: NextRequest) {
 
                     // Stop if we've allocated all the money
                     if (remainingAmount <= 0) break;
+                }
+            } else if (isBulkPayment) {
+                // Bulk payment mode - use precomputed allocations
+                for (const monthData of data.months) {
+                    const month = monthData.month;
+                    const year = monthData.year;
+                    const allocation = monthData.allocation || 0;
+                    const monthlyFee = monthData.fee || 0;
+
+                    // Skip if no allocation for this month
+                    if (allocation <= 0) continue;
+
+                    // Determine if this is a partial payment
+                    const isPartial = allocation < monthlyFee;
+
+                    const newPayment = await prisma.payment.create({
+                        data: {
+                            studentId: data.studentId,
+                            amount: allocation,
+                            paymentMethod: data.paymentMethod,
+                            forMonth: month,
+                            forYear: year,
+                            schoolYearId: data.schoolYearId,
+                            clerkId: data.clerkId,
+                            receiptNumber: `${data.receiptNumber}-${month}-${year}`, // Make each receipt number unique
+                            isPartial: isPartial,
+                            notes: data.notes,
+                        },
+                    });
+
+                    payments.push(newPayment);
                 }
             }
 

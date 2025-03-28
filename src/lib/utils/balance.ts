@@ -249,3 +249,71 @@ export function getAllSchoolYearMonths(schoolYear: SchoolYearParam): MonthYearPa
 
     return result;
 }
+
+/**
+ * Distribute a payment amount across unpaid months
+ * This function takes a payment amount and distributes it across months based on priority
+ * (oldest unpaid months first)
+ */
+export function distributePayment(
+    paymentAmount: number,
+    unpaidMonths: Array<{
+        monthYear: MonthYearPair;
+        status: 'paid' | 'partial' | 'unpaid';
+        expectedAmount: number;
+        paidAmount?: number;
+    }>
+): Array<{
+    monthYear: MonthYearPair;
+    amount: number;
+    isPartial: boolean;
+}> {
+    // Make a copy of unpaid months to avoid mutation
+    const months = [...unpaidMonths];
+
+    // Sort months by date (oldest first)
+    months.sort((a, b) => {
+        // First sort by year
+        if (a.monthYear.year !== b.monthYear.year) {
+            return a.monthYear.year - b.monthYear.year;
+        }
+        // Then by month
+        return a.monthYear.month - b.monthYear.month;
+    });
+
+    // Now allocate payments starting with oldest months
+    let remainingAmount = paymentAmount;
+    const allocations: Array<{
+        monthYear: MonthYearPair;
+        amount: number;
+        isPartial: boolean;
+    }> = [];
+
+    for (const month of months) {
+        // Skip already fully paid months
+        if (month.status === 'paid') continue;
+
+        // Calculate remaining to pay for this month
+        const paidAmount = month.paidAmount || 0;
+        const remainingForMonth = month.expectedAmount - paidAmount;
+
+        // Determine how much to allocate
+        const allocation = Math.min(remainingAmount, remainingForMonth);
+
+        // Only create allocation if there's money to allocate
+        if (allocation > 0) {
+            allocations.push({
+                monthYear: month.monthYear,
+                amount: allocation,
+                isPartial: allocation < remainingForMonth
+            });
+
+            remainingAmount -= allocation;
+        }
+
+        // Stop if we've allocated all the money
+        if (remainingAmount <= 0) break;
+    }
+
+    return allocations;
+}

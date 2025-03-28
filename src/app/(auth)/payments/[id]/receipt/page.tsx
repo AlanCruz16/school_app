@@ -48,7 +48,8 @@ export default async function ReceiptPage({ params }: ReceiptPageProps) {
             receiptNumber: {
                 startsWith: baseReceiptNumber + '-'  // Find all with the same base
             },
-            id: { not: payment.id } // Exclude the current payment
+            id: { not: payment.id }, // Exclude the current payment
+            studentId: payment.studentId //only payments for the same student
         },
         include: {
             student: {
