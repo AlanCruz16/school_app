@@ -316,15 +316,7 @@ export default function PaymentForm({
             });
     }, [selectedMonths, availableMonths]);
 
-    // Generate receipt number
-    const generateReceiptNumber = () => {
-        const date = new Date()
-        const year = date.getFullYear()
-        const month = String(date.getMonth() + 1).padStart(2, '0')
-        const day = String(date.getDate()).padStart(2, '0')
-        const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0')
-        return `R${year}${month}${day}-${random}`
-    }
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -370,8 +362,7 @@ export default function PaymentForm({
         setIsSubmitting(true)
 
         try {
-            // Generate a single receipt number for all payments
-            const receiptNumber = generateReceiptNumber();
+
 
             let paymentData;
 
@@ -390,7 +381,6 @@ export default function PaymentForm({
                     months: monthsData,
                     schoolYearId: activeSchoolYear.id,
                     clerkId,
-                    receiptNumber,
                     isPartial: isPartial || paymentAmount < (selectedMonths.length * monthlyFee),
                     notes: notes || null,
                     // Add these fields to satisfy single-month validation
@@ -414,7 +404,6 @@ export default function PaymentForm({
                     months: monthsData,
                     schoolYearId: activeSchoolYear.id,
                     clerkId,
-                    receiptNumber,
                     isPartial: paymentAmount < totalUnpaidAmount,
                     notes: notes || null,
                     // Flag to indicate bulk payment mode

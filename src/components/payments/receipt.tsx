@@ -18,6 +18,7 @@ interface PaymentDetails {
     forYear?: number
     isPartial: boolean
     notes?: string | null
+    transactionId: string
     student: {
         name: string
         grade: {
@@ -31,7 +32,7 @@ interface PaymentDetails {
     clerk: {
         name: string
     }
-    relatedPayments?: PaymentDetails[]  // Add this for multiple month payments
+    relatedPayments?: PaymentDetails[]  // For multiple month payments from the same transaction
 }
 
 interface ReceiptProps {
@@ -53,11 +54,10 @@ const Receipt = ({
 }: ReceiptProps) => {
     const receiptRef = useRef<HTMLDivElement>(null)
 
-    // Extract the base receipt number
-    const baseReceiptNumber = payment.receiptNumber.split('-')[0];
-
-    // Check if this is a multi-month payment
-    const isMultiMonthPayment = payment.relatedPayments && Array.isArray(payment.relatedPayments) && payment.relatedPayments.length > 0;
+    // Check if this is a multi-month payment based on related payments
+    const isMultiMonthPayment = payment.relatedPayments &&
+        Array.isArray(payment.relatedPayments) &&
+        payment.relatedPayments.length > 0;
 
     const printReceipt = () => {
         const printWindow = window.open('', '', 'width=800,height=600')
@@ -69,7 +69,7 @@ const Receipt = ({
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Payment Receipt #${baseReceiptNumber}</title>
+                <title>Payment Receipt #${payment.receiptNumber}</title>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1">
                 <style>
@@ -222,6 +222,7 @@ const Receipt = ({
             payment.student.grade.tuitionAmount)
 
     // Calculate total amount from all related payments if present
+    // These will only be payments from the same transaction now
     const totalAmount = isMultiMonthPayment && Array.isArray(payment.relatedPayments)
         ? paymentAmount + payment.relatedPayments.reduce((sum, p) => {
             const amount = typeof p.amount === 'object'
@@ -256,7 +257,7 @@ const Receipt = ({
             <AutoPrintReceipt printFunction={printReceipt} />
 
             <div className="print:hidden mb-4 flex justify-between">
-                <h1 className="text-xl font-bold">Receipt #{baseReceiptNumber}</h1>
+                <h1 className="text-xl font-bold">Receipt #{payment.receiptNumber}</h1>
                 <Button variant="outline" onClick={printReceipt}>
                     <Printer className="mr-2 h-4 w-4" />
                     Print Receipt
@@ -291,7 +292,7 @@ const Receipt = ({
                     <div className="receipt-info space-y-1 text-sm">
                         <div>
                             <span className="label">Receipt #:</span>
-                            <span>{baseReceiptNumber}</span>
+                            <span>{payment.receiptNumber}</span>
                         </div>
                         <div>
                             <span className="label">Date:</span>
@@ -330,7 +331,7 @@ const Receipt = ({
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {/* Add filters and de-duplication */}
+                                        {/* Only showing payments from the same transaction */}
                                         {sortedPayments
                                             // Create a unique key for each month/year combination
                                             .filter((p, index, self) => {

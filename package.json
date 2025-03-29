@@ -42,6 +42,7 @@
     "sonner": "^2.0.1",
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",
+    "uuid": "^11.1.0",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
@@ -51,6 +52,7 @@
     "@types/react": "^18.3.20",
     "@types/react-big-calendar": "^1.16.1",
     "@types/react-dom": "^18",
+    "@types/uuid": "^10.0.0",
     "eslint": "^8",
     "eslint-config-next": "14.2.24",
     "postcss": "^8",

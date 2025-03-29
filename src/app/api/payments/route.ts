@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { createClient } from '@/lib/utils/supabase/server'
+import { v4 as uuidv4 } from 'uuid'
+import { generateReceiptNumber } from '@/lib/utils/receipt'
 
 // POST /api/payments - Create a new payment
 export async function POST(request: NextRequest) {
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest) {
         if (!isMultiMonth) {
             // Validate required fields
             if (!data.studentId || !data.amount || !data.paymentMethod ||
-                !data.forMonth || !data.schoolYearId || !data.clerkId || !data.receiptNumber) {
+                !data.forMonth || !data.schoolYearId || !data.clerkId) {
                 return new NextResponse(JSON.stringify({
                     error: 'Missing required fields for payment'
                 }), {
@@ -50,7 +52,7 @@ export async function POST(request: NextRequest) {
         } else {
             // Validate multi-month data
             if (!data.studentId || !data.amount || !data.paymentMethod ||
-                !data.schoolYearId || !data.clerkId || !data.receiptNumber ||
+                !data.schoolYearId || !data.clerkId ||
                 !data.months || !Array.isArray(data.months) || data.months.length === 0) {
 
                 console.error('Missing required fields for multi-month payment:', {
@@ -88,7 +90,7 @@ export async function POST(request: NextRequest) {
         if (isBulkPayment) {
             // Validate bulk payment data
             if (!data.studentId || !data.amount || !data.paymentMethod ||
-                !data.schoolYearId || !data.clerkId || !data.receiptNumber ||
+                !data.schoolYearId || !data.clerkId ||
                 !data.months || !Array.isArray(data.months) || data.months.length === 0) {
 
                 console.error('Missing required fields for bulk payment:', {
@@ -137,9 +139,14 @@ export async function POST(request: NextRequest) {
                 headers: { 'Content-Type': 'application/json' },
             })
         }
+        // Create a single transaction ID for all payments in this transaction
+        const transactionId = uuidv4();
 
-        // Start a transaction to update both payment and student balance
+        // Start a transaction to update payment(s), student balance, and receipt counter atomically
         const result = await prisma.$transaction(async (prisma) => {
+            // Generate the sequential receipt number WITHIN the transaction
+            const receiptNumber = await generateReceiptNumber(prisma, data.schoolYearId);
+
             let payments = [];
             const paymentAmount = parseFloat(data.amount.toString());
             const currentBalance = parseFloat(student.balance.toString());
@@ -156,7 +163,8 @@ export async function POST(request: NextRequest) {
                         forYear: data.forYear || new Date().getFullYear(),
                         schoolYearId: data.schoolYearId,
                         clerkId: data.clerkId,
-                        receiptNumber: data.receiptNumber,
+                        receiptNumber: receiptNumber, // Use the single generated receipt number for the transaction
+                        transactionId: transactionId, // Link payment to the transaction
                         isPartial: data.isPartial === true,
                         notes: data.notes,
                     },
@@ -201,7 +209,8 @@ export async function POST(request: NextRequest) {
                             forYear: year,
                             schoolYearId: data.schoolYearId,
                             clerkId: data.clerkId,
-                            receiptNumber: `${data.receiptNumber}-${month}-${year}`, // Make each receipt number unique
+                            receiptNumber: receiptNumber, // Keep the same receipt number for all!
+                            transactionId: transactionId, // Link payment to the transaction
                             isPartial: isPartial,
                             notes: data.notes,
                         },
@@ -235,7 +244,8 @@ export async function POST(request: NextRequest) {
                             forYear: year,
                             schoolYearId: data.schoolYearId,
                             clerkId: data.clerkId,
-                            receiptNumber: `${data.receiptNumber}-${month}-${year}`, // Make each receipt number unique
+                            receiptNumber: receiptNumber, // Keep the same receipt number for all!
+                            transactionId: transactionId, // Link payment to the transaction
                             isPartial: isPartial,
                             notes: data.notes,
                         },
@@ -350,9 +360,42 @@ export async function GET(request: NextRequest) {
         return NextResponse.json(payments)
     } catch (error) {
         console.error('Error fetching payments:', error)
-        return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), {
+
+        // Handle Prisma error for unique constraint violation
+        // Type check for Prisma errors
+        if (
+            typeof error === 'object' &&
+            error !== null &&
+            'code' in error &&
+            error.code === 'P2002' &&
+            'meta' in error &&
+            error.meta &&
+            typeof error.meta === 'object' &&
+            'target' in error.meta
+        ) {
+            const target = error.meta.target;
+            if (Array.isArray(target) && target.includes('receiptNumber')) {
+                return new NextResponse(JSON.stringify({
+                    error: 'Receipt number already exists. Please try again.',
+                    details: 'A database conflict occurred with the receipt number generation.'
+                }), {
+                    status: 409, // Conflict status code
+                    headers: { 'Content-Type': 'application/json' },
+                });
+            }
+        }
+
+        // Get error details safely
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorStack = error instanceof Error ? error.stack : undefined;
+
+        return new NextResponse(JSON.stringify({
+            error: 'Internal Server Error',
+            message: errorMessage,
+            stack: process.env.NODE_ENV === 'development' ? errorStack : undefined
+        }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },
-        })
+        });
     }
 }
