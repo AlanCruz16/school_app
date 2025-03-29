@@ -28,3 +28,17 @@ export function formatMonth(month: number): string {
     const date = new Date(2000, month - 1, 1)
     return date.toLocaleDateString('en-US', { month: 'long' })
 }
+
+// Import PaymentMethod enum
+import { PaymentMethod } from '@prisma/client';
+
+// Define a map for displaying ALL possible payment method values (including legacy)
+export const paymentMethodDisplayMap: Record<PaymentMethod, string> = {
+    [PaymentMethod.CASH]: 'CASH', // Display legacy as is
+    [PaymentMethod.CARD]: 'CARD', // Display legacy as is
+    [PaymentMethod.EFECTIVO]: '01 Efectivo',
+    [PaymentMethod.CHEQUE_NOMINATIVO]: '02 Cheque nominativo',
+    [PaymentMethod.TRANSFERENCIA]: '03 Transferencia electrónica de fondos',
+    [PaymentMethod.TARJETA_CREDITO]: '04 Tarjeta de crédito',
+    [PaymentMethod.TARJETA_DEBITO]: '28 Tarjeta de débito',
+};

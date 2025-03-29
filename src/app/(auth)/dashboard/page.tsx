@@ -36,11 +36,42 @@ async function DashboardContent() {
         }
     })
 
-    // Get current month
-    const currentMonth = new Date().getMonth() + 1
+    // Get current month and year for filtering payments *received*
+    const today = new Date()
+    const currentYear = today.getFullYear()
+    const currentMonthIndex = today.getMonth() // 0-indexed for Date object calculations
 
-    // Get all payments for the active school year (instead of just current month)
-    const allPayments = await prisma.payment.findMany({
+    // Calculate start and end dates of the current calendar month
+    const startDate = new Date(currentYear, currentMonthIndex, 1) // First day, 00:00:00
+    const endDate = new Date(currentYear, currentMonthIndex + 1, 0, 23, 59, 59, 999) // Last day, 23:59:59
+
+    // Fetch payments received this month
+    const paymentsReceivedThisMonth = await prisma.payment.findMany({
+        where: {
+            paymentDate: {
+                gte: startDate,
+                lte: endDate,
+            },
+        },
+        select: {
+            amount: true, // Only need the amount for summing
+        },
+    })
+
+    // Calculate total received this month
+    const totalReceivedThisMonth = paymentsReceivedThisMonth.reduce((sum, payment) => {
+        const amount = typeof payment.amount === 'object' ?
+            parseFloat(payment.amount.toString()) :
+            (typeof payment.amount === 'string' ?
+                parseFloat(payment.amount) :
+                payment.amount)
+        return sum + amount
+    }, 0)
+
+    // --- Data for PaymentSummary component (still needed) ---
+    const currentMonthForSummary = today.getMonth() + 1 // 1-indexed for component prop
+    // Get all payments for the active school year (for PaymentSummary)
+    const allPaymentsForSummary = await prisma.payment.findMany({
         where: {
             schoolYearId: activeSchoolYear?.id
         },
@@ -60,15 +91,10 @@ async function DashboardContent() {
             paymentDate: 'desc'
         }
     })
+    // --- End Data for PaymentSummary ---
 
-    // Calculate total payments for current month
-    const currentMonthPayments = allPayments.filter(payment => payment.forMonth === currentMonth)
-    const totalMonthlyPayments = currentMonthPayments.reduce((sum, payment) => {
-        // Handle Prisma Decimal type safely
-        return sum + parseFloat(payment.amount.toString())
-    }, 0)
 
-    // Get students with outstanding balances
+    // Get students with outstanding balances (remains the same)
     const studentsWithBalance = await prisma.student.findMany({
         where: {
             active: true,
@@ -122,12 +148,12 @@ async function DashboardContent() {
                 <Card>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">
-                            Payments This Month
+                            Payments Received This Month
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            {formatCurrency(totalMonthlyPayments)}
+                            {formatCurrency(totalReceivedThisMonth)}
                         </div>
                     </CardContent>
                 </Card>
@@ -148,10 +174,10 @@ async function DashboardContent() {
 
             <div className="grid gap-6 md:grid-cols-2">
                 <PaymentSummary
-                    payments={allPayments}
+                    payments={allPaymentsForSummary} // Use the separate fetch for this component
                     totalStudents={totalStudents}
-                    currentMonth={currentMonth}
-                    activeSchoolYear={activeSchoolYear || undefined} // Add this line
+                    currentMonth={currentMonthForSummary} // Use 1-indexed month
+                    activeSchoolYear={activeSchoolYear || undefined}
                 />
 
                 <Card>

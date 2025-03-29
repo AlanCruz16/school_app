@@ -9,7 +9,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+// Keep RadioGroup import in case it's used elsewhere or for future reference
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select' // Import Select components
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -27,6 +29,29 @@ import { Check, AlertCircle, Calendar } from 'lucide-react'
 import { distributePayment } from '@/lib/utils/balance'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CreditCard, DollarSign } from 'lucide-react'
+
+// Define the PaymentMethod enum type based on Prisma schema
+import { PaymentMethod as PrismaPaymentMethod } from '@prisma/client';
+
+// Define the mapping for the options available in the dropdown
+const paymentMethodOptions = {
+    [PrismaPaymentMethod.EFECTIVO]: '01 Efectivo',
+    [PrismaPaymentMethod.CHEQUE_NOMINATIVO]: '02 Cheque nominativo',
+    [PrismaPaymentMethod.TRANSFERENCIA]: '03 Transferencia electrónica de fondos',
+    [PrismaPaymentMethod.TARJETA_CREDITO]: '04 Tarjeta de crédito',
+    [PrismaPaymentMethod.TARJETA_DEBITO]: '28 Tarjeta de débito',
+};
+
+// Define a separate map for displaying ALL possible values (including legacy)
+const paymentMethodDisplayMap = {
+    [PrismaPaymentMethod.CASH]: 'CASH', // Display legacy as is
+    [PrismaPaymentMethod.CARD]: 'CARD', // Display legacy as is
+    [PrismaPaymentMethod.EFECTIVO]: '01 Efectivo',
+    [PrismaPaymentMethod.CHEQUE_NOMINATIVO]: '02 Cheque nominativo',
+    [PrismaPaymentMethod.TRANSFERENCIA]: '03 Transferencia electrónica de fondos',
+    [PrismaPaymentMethod.TARJETA_CREDITO]: '04 Tarjeta de crédito',
+    [PrismaPaymentMethod.TARJETA_DEBITO]: '28 Tarjeta de débito',
+};
 
 
 interface Student {
@@ -47,7 +72,7 @@ interface Payment {
     id: string
     amount: any
     paymentDate: string | Date
-    paymentMethod: string
+    paymentMethod: PrismaPaymentMethod // Use the enum type
     forMonth: number
     forYear?: number
     isPartial: boolean
@@ -99,8 +124,8 @@ export default function PaymentForm({
     // Monthly fee based on grade
     const monthlyFee = parseFloat(student.grade?.tuitionAmount?.toString() || "0")
 
-    // Form state
-    const [paymentMethod, setPaymentMethod] = useState('CASH')
+    // Form state - Use PrismaPaymentMethod enum type and default to EFECTIVO
+    const [paymentMethod, setPaymentMethod] = useState<PrismaPaymentMethod>(PrismaPaymentMethod.EFECTIVO)
     const [selectedMonths, setSelectedMonths] = useState<string[]>([])
     const [isPartial, setIsPartial] = useState(false)
     const [amount, setAmount] = useState(monthlyFee.toString())
@@ -377,7 +402,7 @@ export default function PaymentForm({
                 paymentData = {
                     studentId: student.id,
                     amount: paymentAmount,
-                    paymentMethod,
+                    paymentMethod, // Pass the enum value directly
                     months: monthsData,
                     schoolYearId: activeSchoolYear.id,
                     clerkId,
@@ -400,7 +425,7 @@ export default function PaymentForm({
                 paymentData = {
                     studentId: student.id,
                     amount: paymentAmount,
-                    paymentMethod,
+                    paymentMethod, // Pass the enum value directly
                     months: monthsData,
                     schoolYearId: activeSchoolYear.id,
                     clerkId,
@@ -509,23 +534,24 @@ export default function PaymentForm({
                         </div>
                     </div>
 
-                    {/* Payment Method */}
+                    {/* Payment Method - Replaced with Select */}
                     <div className="space-y-3">
-                        <Label>Payment Method</Label>
-                        <RadioGroup
+                        <Label htmlFor="paymentMethod">Payment Method</Label>
+                        <Select
                             value={paymentMethod}
-                            onValueChange={setPaymentMethod}
-                            className="flex space-x-4"
+                            onValueChange={(value) => setPaymentMethod(value as PrismaPaymentMethod)}
                         >
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="CASH" id="cash" />
-                                <Label htmlFor="cash">Cash</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="CARD" id="card" />
-                                <Label htmlFor="card">Card</Label>
-                            </div>
-                        </RadioGroup>
+                            <SelectTrigger id="paymentMethod">
+                                <SelectValue placeholder="Select payment method" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {Object.entries(paymentMethodOptions).map(([key, value]) => (
+                                    <SelectItem key={key} value={key}>
+                                        {value}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     {/* Payment Mode Selection */}
@@ -798,7 +824,8 @@ export default function PaymentForm({
                             </div>
                             <div className="grid grid-cols-2">
                                 <span className="text-muted-foreground">Payment Method:</span>
-                                <span>{paymentMethod === 'CASH' ? 'Cash' : 'Card'}</span>
+                                {/* Use the display map here */}
+                                <span>{paymentMethodDisplayMap[paymentMethod] || paymentMethod}</span>
                             </div>
                             <div className="grid grid-cols-2">
                                 <span className="text-muted-foreground">Processed by:</span>

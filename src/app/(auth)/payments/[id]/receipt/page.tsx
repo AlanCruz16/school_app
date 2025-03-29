@@ -39,17 +39,12 @@ export default async function ReceiptPage({ params }: ReceiptPageProps) {
         notFound()
     }
 
-    // For multi-month payments - check if this payment is part of a batch
-    // Payments from the same transaction will have similar receipt numbers (base-month-year pattern)
-    const baseReceiptNumber = payment.receiptNumber.split('-')[0]; // Get the base part of the receipt
-
+    // Fetch all payments belonging to the same transaction
     const relatedPayments = await prisma.payment.findMany({
         where: {
-            receiptNumber: {
-                startsWith: baseReceiptNumber + '-'  // Find all with the same base
-            },
-            id: { not: payment.id }, // Exclude the current payment
-            studentId: payment.studentId //only payments for the same student
+            transactionId: payment.transactionId, // Find all payments with the same transaction ID
+            id: { not: payment.id }, // Exclude the current payment itself
+            studentId: payment.studentId // Ensure they are for the same student (redundant but safe)
         },
         include: {
             student: {

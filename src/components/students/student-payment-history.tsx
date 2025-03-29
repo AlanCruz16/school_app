@@ -11,16 +11,20 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { formatCurrency, formatDate, formatMonth } from '@/lib/utils/format'
+// Import the display map along with other formatters
+import { formatCurrency, formatDate, formatMonth, paymentMethodDisplayMap } from '@/lib/utils/format'
 import PaymentActionButtons from '@/components/payments/payment-action-buttons'
 import { Tooltip } from '@/components/ui/tooltip'
 import { CalendarDays } from 'lucide-react'
+
+// Import PaymentMethod enum type
+import { PaymentMethod as PrismaPaymentMethod } from '@prisma/client';
 
 interface Payment {
     id: string
     amount: any
     paymentDate: string | Date
-    paymentMethod: string
+    paymentMethod: PrismaPaymentMethod // Use enum type
     forMonth: number
     forYear?: number
     isPartial: boolean
@@ -139,7 +143,8 @@ export default function StudentPaymentHistory({ payments }: StudentPaymentHistor
                                 </TableCell>
                                 <TableCell>{payment.schoolYear.name}</TableCell>
                                 <TableCell>
-                                    <Badge variant="outline">{payment.paymentMethod}</Badge>
+                                    {/* Use the display map, fallback to raw value */}
+                                    <Badge variant="outline">{paymentMethodDisplayMap[payment.paymentMethod] || payment.paymentMethod}</Badge>
                                 </TableCell>
                                 <TableCell>
                                     {payment.isPartial ? (

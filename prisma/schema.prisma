@@ -93,8 +93,13 @@ model Payment {
 }
 
 enum PaymentMethod {
-  CASH
-  CARD
+  CASH              // Keep for legacy data
+  CARD              // Keep for legacy data
+  EFECTIVO          // 01 Efectivo
+  CHEQUE_NOMINATIVO // 02 Cheque nominativo
+  TRANSFERENCIA     // 03 Transferencia electrónica de fondos
+  TARJETA_CREDITO   // 04 Tarjeta de crédito
+  TARJETA_DEBITO    // 28 Tarjeta de débito
 }
 
 model User {

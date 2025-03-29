@@ -4,16 +4,20 @@
 import React, { useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { formatCurrency, formatDate, formatMonth } from '@/lib/utils/format'
+// Import the display map along with other formatters
+import { formatCurrency, formatDate, formatMonth, paymentMethodDisplayMap } from '@/lib/utils/format'
 import { Printer } from 'lucide-react'
 import AutoPrintReceipt from './auto-print-receipt'
+
+// Import PaymentMethod enum type
+import { PaymentMethod as PrismaPaymentMethod } from '@prisma/client';
 
 interface PaymentDetails {
     id: string
     receiptNumber: string
     amount: any
     paymentDate: string | Date
-    paymentMethod: string
+    paymentMethod: PrismaPaymentMethod // Use enum type
     forMonth: number
     forYear?: number
     isPartial: boolean
@@ -312,7 +316,8 @@ const Receipt = ({
                         </div>
                         <div>
                             <span className="label">Payment Method:</span>
-                            <span>{payment.paymentMethod}</span>
+                            {/* Use the display map, fallback to raw value if not found */}
+                            <span>{paymentMethodDisplayMap[payment.paymentMethod] || payment.paymentMethod}</span>
                         </div>
                         <div>
                             <span className="label">Payment Type:</span>
