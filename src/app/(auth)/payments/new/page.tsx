@@ -121,6 +121,17 @@ export default async function NewPaymentPage({
         notFound()
     }
 
+    // Fetch student's payments for the active school year
+    const studentPayments = await prisma.payment.findMany({
+        where: {
+            studentId: studentId,
+            schoolYearId: activeSchoolYear.id,
+        },
+        orderBy: {
+            paymentDate: 'asc' // Optional: order by date
+        }
+    });
+
     // If student has no grade assigned, redirect to edit page
     if (!student.grade) {
         return (
@@ -172,6 +183,7 @@ export default async function NewPaymentPage({
                 activeSchoolYear={activeSchoolYear}
                 initialMonth={initialMonth}
                 initialYear={initialYear}
+                studentPayments={studentPayments} // Pass fetched payments
             />
         </div>
     )

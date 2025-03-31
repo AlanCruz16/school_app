@@ -11,7 +11,8 @@ import {
     Settings,
     User,
     Users,
-    GraduationCap
+    GraduationCap,
+    BarChart // Added for Reports link
 } from 'lucide-react'
 
 const sidebarLinks = [
@@ -21,6 +22,8 @@ const sidebarLinks = [
     { name: 'Calendar', href: '/calendar', icon: CalendarDays },
     { name: 'Tutors', href: '/tutors', icon: User },
     { name: 'Grades', href: '/grades', icon: GraduationCap },
+    // Documenting change: Added Reports link to the sidebar.
+    { name: 'Reports', href: '/reports', icon: BarChart },
     { name: 'Settings', href: '/settings', icon: Settings },
 ]
 

@@ -66,6 +66,7 @@ interface Student {
     grade: {
         name: string
         tuitionAmount: any
+        inscriptionCost?: any // Added inscription cost
         schoolYear: {
             id: string
             name: string
@@ -80,7 +81,7 @@ interface Payment {
     paymentDate: string | Date
     paymentMethod: PrismaPaymentMethod // Use the enum type
     paymentType?: PaymentType // Added
-    description?: string // Added
+    description?: string | null // Allow null from Prisma
     forMonth?: number | null // Made nullable
     forYear?: number
     isPartial: boolean
@@ -129,16 +130,46 @@ export default function PaymentForm({
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
 
-    // Monthly fee based on grade
+    // Fees based on grade
     const monthlyFee = parseFloat(student.grade?.tuitionAmount?.toString() || "0")
+    const inscriptionFee = parseFloat(student.grade?.inscriptionCost?.toString() || "0")
+
+    // Check if inscription has been paid for the active year
+    const hasPaidInscription = useMemo(() => {
+        return studentPayments.some(p =>
+            p.paymentType === PaymentType.INSCRIPTION &&
+            p.schoolYearId === activeSchoolYear.id
+        );
+    }, [studentPayments, activeSchoolYear.id]);
+
+    // Filter available payment types
+    const availablePaymentTypes = useMemo(() => {
+        // Start with TUITION and OPTIONAL which are always available
+        // Use Partial to allow INSCRIPTION to be potentially missing
+        const options: Partial<typeof paymentTypeOptions> = {
+            [PaymentType.TUITION]: paymentTypeOptions[PaymentType.TUITION],
+            [PaymentType.OPTIONAL]: paymentTypeOptions[PaymentType.OPTIONAL],
+        };
+        // Conditionally add INSCRIPTION if it hasn't been paid
+        if (!hasPaidInscription) {
+            options[PaymentType.INSCRIPTION] = paymentTypeOptions[PaymentType.INSCRIPTION];
+        }
+        // Note: This might change the order. If order matters, consider using Object.entries and filter/map.
+        // For now, this ensures the correct types are available.
+        return options;
+    }, [hasPaidInscription]);
+
+    // Determine initial payment type (avoid INSCRIPTION if paid)
+    const initialPaymentType = hasPaidInscription ? PaymentType.TUITION : PaymentType.TUITION; // Default to TUITION
 
     // Form state
     const [paymentMethod, setPaymentMethod] = useState<PrismaPaymentMethod>(PrismaPaymentMethod.EFECTIVO)
     const [selectedMonths, setSelectedMonths] = useState<string[]>([])
-    const [paymentType, setPaymentType] = useState<PaymentType>(PaymentType.TUITION)
+    const [paymentType, setPaymentType] = useState<PaymentType>(initialPaymentType)
     const [description, setDescription] = useState('')
     const [isPartial, setIsPartial] = useState(false)
-    const [amount, setAmount] = useState(paymentType === PaymentType.TUITION ? monthlyFee.toString() : '')
+    // Adjust initial amount based on initial type
+    const [amount, setAmount] = useState(initialPaymentType === PaymentType.TUITION ? monthlyFee.toString() : (initialPaymentType === PaymentType.INSCRIPTION ? inscriptionFee.toString() : ''))
     const [notes, setNotes] = useState('')
     const [payments, setPayments] = useState<Payment[]>(studentPayments || [])
     const [paymentMode, setPaymentMode] = useState<'specific' | 'bulk'>('specific') // Only relevant for TUITION
@@ -507,7 +538,10 @@ export default function PaymentForm({
                                     setAmount(monthlyFee.toString());
                                     setIsPartial(false);
                                     setSelectedMonths([]);
-                                } else {
+                                } else if (newType === PaymentType.INSCRIPTION) {
+                                    setAmount(inscriptionFee.toString());
+                                    setIsPartial(false); // Inscription is typically not partial
+                                } else { // Optional
                                     setAmount('');
                                 }
                                 setDescription('');
@@ -515,7 +549,7 @@ export default function PaymentForm({
                         >
                             <SelectTrigger id="paymentType"><SelectValue placeholder="Select payment type" /></SelectTrigger>
                             <SelectContent>
-                                {Object.entries(paymentTypeOptions).map(([key, { label, icon: Icon }]) => (
+                                {Object.entries(availablePaymentTypes).map(([key, { label, icon: Icon }]) => ( // Use filtered types
                                     <SelectItem key={key} value={key}>
                                         <div className="flex items-center gap-2">
                                             <Icon className="h-4 w-4 text-muted-foreground" />
@@ -673,7 +707,9 @@ export default function PaymentForm({
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
                                 className="pl-8"
+                                readOnly={paymentType === PaymentType.INSCRIPTION} // Make read-only for inscription
                                 disabled={
+                                    (paymentType === PaymentType.INSCRIPTION) || // Disable if inscription type
                                     (isTuitionMode && paymentMode === 'specific' && !isPartial && (availablePaymentMonths.length === 0 || selectedMonths.length === 0)) ||
                                     (isTuitionMode && paymentMode === 'bulk' && unpaidMonthsForDistribution.length === 0)
                                 }
