@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
         const data = await request.json()
 
         // Validate required fields
-        if (!data.name || !data.tuitionAmount || !data.schoolYearId) {
+        if (!data.name || data.tuitionAmount === undefined || !data.schoolYearId) { // Check tuitionAmount explicitly for undefined
             return new NextResponse(JSON.stringify({
                 error: 'Missing required fields: name, tuitionAmount, and schoolYearId are required'
             }), {
@@ -92,6 +92,7 @@ export async function POST(request: NextRequest) {
             data: {
                 name: data.name,
                 tuitionAmount: data.tuitionAmount,
+                inscriptionCost: data.inscriptionCost, // Add inscriptionCost (will use DB default if undefined)
                 schoolYearId: data.schoolYearId,
             },
             include: {

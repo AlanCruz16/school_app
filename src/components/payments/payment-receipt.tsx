@@ -1,15 +1,20 @@
 'use client'
 
 import { useRef } from 'react'
-import { formatCurrency, formatDate, formatMonth } from '@/lib/utils/format'
+// Import PaymentMethod and PaymentType enum types and display map
+import { PaymentMethod as PrismaPaymentMethod, PaymentType } from '@prisma/client';
+import { formatCurrency, formatDate, formatMonth, paymentMethodDisplayMap } from '@/lib/utils/format'
 
 interface PaymentReceiptProps {
     payment: {
         id: string
         amount: any
         paymentDate: string | Date
-        paymentMethod: string
-        forMonth: number
+        paymentMethod: PrismaPaymentMethod // Use enum type
+        paymentType?: PaymentType // Added
+        description?: string // Added
+        forMonth?: number | null // Made nullable
+        forYear?: number // Added
         isPartial: boolean
         receiptNumber: string
         notes?: string | null
@@ -60,7 +65,8 @@ export default function PaymentReceipt({ payment }: PaymentReceiptProps) {
                             </p>
                             <p className="text-sm">
                                 <span className="font-medium">Payment Method: </span>
-                                {payment.paymentMethod === 'CASH' ? 'Cash' : 'Card'}
+                                {/* Use display map */}
+                                {paymentMethodDisplayMap[payment.paymentMethod] || payment.paymentMethod}
                             </p>
                         </div>
                     </div>
@@ -98,7 +104,17 @@ export default function PaymentReceipt({ payment }: PaymentReceiptProps) {
                             <tbody className="divide-y divide-border">
                                 <tr>
                                     <td className="px-4 py-3 text-sm">
-                                        Tuition payment for {formatMonth(payment.forMonth)} ({payment.schoolYear.name})
+                                        {/* Display Concept based on type */}
+                                        {payment.paymentType === PaymentType.TUITION && payment.forMonth
+                                            ? `Tuition - ${formatMonth(payment.forMonth)} ${payment.forYear || ''}`.trim()
+                                            : payment.paymentType === PaymentType.INSCRIPTION
+                                                ? `Inscription ${payment.forYear || ''}`.trim()
+                                                : payment.paymentType === PaymentType.OPTIONAL
+                                                    ? payment.description || 'Optional Payment'
+                                                    : payment.forMonth // Fallback for older data
+                                                        ? `Tuition - ${formatMonth(payment.forMonth)} ${payment.forYear || ''}`.trim()
+                                                        : 'Payment'
+                                        }
                                         {payment.isPartial && <span className="text-muted-foreground ml-1">(Partial)</span>}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-right font-medium">

@@ -15,17 +15,19 @@ import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatDate, formatMonth, paymentMethodDisplayMap } from '@/lib/utils/format'
 import PaymentActionButtons from '@/components/payments/payment-action-buttons'
 import { Tooltip } from '@/components/ui/tooltip'
-import { CalendarDays } from 'lucide-react'
+import { CalendarDays, BookOpen, Gift } from 'lucide-react' // Added icons
 
-// Import PaymentMethod enum type
-import { PaymentMethod as PrismaPaymentMethod } from '@prisma/client';
+// Import PaymentMethod and PaymentType enum types
+import { PaymentMethod as PrismaPaymentMethod, PaymentType } from '@prisma/client';
 
 interface Payment {
     id: string
     amount: any
     paymentDate: string | Date
     paymentMethod: PrismaPaymentMethod // Use enum type
-    forMonth: number
+    paymentType?: PaymentType // Added
+    description?: string // Added
+    forMonth?: number | null // Made nullable
     forYear?: number
     isPartial: boolean
     receiptNumber: string
@@ -80,23 +82,37 @@ export default function StudentPaymentHistory({ payments }: StudentPaymentHistor
             if (a.forYear !== undefined && b.forYear !== undefined) {
                 if (a.forYear !== b.forYear) return a.forYear - b.forYear;
             }
-            return a.forMonth - b.forMonth;
+            // Handle potentially null/undefined forMonth
+            const monthA = a.forMonth ?? 0; // Default to 0 if null/undefined
+            const monthB = b.forMonth ?? 0; // Default to 0 if null/undefined
+            return monthA - monthB;
         });
 
         // Generate a readable list of months
         const monthsList = sortedMonths.map(p =>
-            `${formatMonth(p.forMonth)}${p.forYear ? ` ${p.forYear}` : ''}`
+            `${formatMonth(p.forMonth!)} ${p.forYear || ''}`.trim() // Added non-null assertion for formatMonth
         ).join(', ');
+
+        // Determine the primary concept for the group
+        let concept = 'Payment'; // Default
+        if (firstPayment.paymentType === PaymentType.TUITION) {
+            concept = isMultiMonth ? `Tuition - Multiple (${group.length})` : `Tuition - ${formatMonth(firstPayment.forMonth!)} ${firstPayment.forYear || ''}`.trim();
+        } else if (firstPayment.paymentType === PaymentType.INSCRIPTION) {
+            concept = `Inscription ${firstPayment.forYear || ''}`.trim();
+        } else if (firstPayment.paymentType === PaymentType.OPTIONAL) {
+            concept = firstPayment.description || 'Optional Payment';
+        } else if (firstPayment.forMonth) { // Fallback for older data
+            concept = isMultiMonth ? `Tuition - Multiple (${group.length})` : `Tuition - ${formatMonth(firstPayment.forMonth!)} ${firstPayment.forYear || ''}`.trim();
+        }
+
 
         return {
             ...firstPayment, // Keep all original properties
             isMultiMonth,
             totalAmount,
-            monthsList,
+            monthsList, // Keep for tooltip if needed
             relatedPayments: isMultiMonth ? group : undefined,
-            displayMonth: isMultiMonth
-                ? `Multiple (${group.length})`
-                : formatMonth(firstPayment.forMonth)
+            displayConcept: concept // Use the determined concept
         };
     });
 
@@ -113,7 +129,7 @@ export default function StudentPaymentHistory({ payments }: StudentPaymentHistor
                         <TableRow>
                             <TableHead>Date</TableHead>
                             <TableHead>Receipt No.</TableHead>
-                            <TableHead>Month</TableHead>
+                            <TableHead>Concept</TableHead> {/* Changed Header */}
                             <TableHead>School Year</TableHead>
                             <TableHead>Method</TableHead>
                             <TableHead>Status</TableHead>
@@ -128,17 +144,15 @@ export default function StudentPaymentHistory({ payments }: StudentPaymentHistor
                                 <TableCell>{formatDate(payment.paymentDate)}</TableCell>
                                 <TableCell>{payment.receiptNumber}</TableCell>
                                 <TableCell>
-                                    {payment.isMultiMonth ? (
-                                        <div className="flex items-center">
-                                            <span>{payment.displayMonth}</span>
-                                            <Tooltip content={payment.monthsList}>
-                                                <div className="ml-1 cursor-help">
-                                                    <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                                                </div>
-                                            </Tooltip>
-                                        </div>
-                                    ) : (
-                                        payment.displayMonth
+                                    {/* Display Concept */}
+                                    <span>{payment.displayConcept}</span>
+                                    {/* Optional: Keep tooltip for multi-month tuition details */}
+                                    {payment.isMultiMonth && payment.paymentType === PaymentType.TUITION && (
+                                        <Tooltip content={`Months: ${payment.monthsList}`}>
+                                            <div className="ml-1 cursor-help inline-block">
+                                                <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                                            </div>
+                                        </Tooltip>
                                     )}
                                 </TableCell>
                                 <TableCell>{payment.schoolYear.name}</TableCell>

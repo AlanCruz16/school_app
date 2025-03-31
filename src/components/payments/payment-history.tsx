@@ -19,17 +19,20 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 // Import the display map along with other formatters
-import { formatCurrency, formatDate, formatMonth, paymentMethodDisplayMap } from '@/lib/utils/format'
+import { formatCurrency, formatDate, formatMonth, paymentMethodDisplayMap } from '@/lib/utils/format' // Removed formatMonthYear
 
-// Import PaymentMethod enum type
-import { PaymentMethod as PrismaPaymentMethod } from '@prisma/client';
+// Import PaymentMethod and PaymentType enum types
+import { PaymentMethod as PrismaPaymentMethod, PaymentType } from '@prisma/client';
 
 interface Payment {
     id: string
     amount: any
     paymentDate: string | Date
     paymentMethod: PrismaPaymentMethod // Use enum type
-    forMonth: number
+    paymentType?: PaymentType // Added (optional for backward compatibility)
+    description?: string // Added
+    forMonth?: number | null // Made nullable
+    forYear?: number // Added (optional for backward compatibility)
     isPartial: boolean
     receiptNumber: string
     student: {
@@ -70,7 +73,7 @@ export default function PaymentHistory({ payments }: PaymentHistoryProps) {
                             <TableHead>Date</TableHead>
                             <TableHead>Receipt No.</TableHead>
                             <TableHead>Student</TableHead>
-                            <TableHead>Month</TableHead>
+                            <TableHead>Concept</TableHead> {/* Changed from Month */}
                             <TableHead>School Year</TableHead>
                             <TableHead>Method</TableHead>
                             <TableHead>Status</TableHead>
@@ -92,7 +95,19 @@ export default function PaymentHistory({ payments }: PaymentHistoryProps) {
                                         {payment.student.name}
                                     </Link>
                                 </TableCell>
-                                <TableCell>{formatMonth(payment.forMonth)}</TableCell>
+                                <TableCell>
+                                    {/* Display Concept based on type */}
+                                    {payment.paymentType === PaymentType.TUITION && payment.forMonth
+                                        ? `Tuition - ${formatMonth(payment.forMonth)} ${payment.forYear || ''}`.trim()
+                                        : payment.paymentType === PaymentType.INSCRIPTION
+                                            ? `Inscription ${payment.forYear || ''}`.trim()
+                                            : payment.paymentType === PaymentType.OPTIONAL
+                                                ? payment.description || 'Optional Payment'
+                                                : payment.forMonth // Fallback for older data
+                                                    ? `Tuition - ${formatMonth(payment.forMonth)} ${payment.forYear || ''}`.trim()
+                                                    : 'Payment'
+                                    }
+                                </TableCell>
                                 <TableCell>{payment.schoolYear.name}</TableCell>
                                 <TableCell>
                                     {/* Use the display map, fallback to raw value */}
