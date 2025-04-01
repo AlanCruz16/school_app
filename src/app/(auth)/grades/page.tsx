@@ -46,7 +46,7 @@ export default function GradesPage() {
                 setGrades(data)
             } catch (e: any) {
                 console.error('Failed to fetch grades:', e)
-                setError('Failed to load grades. Please try again later.')
+                setError('Error al cargar los grados. Por favor, inténtelo de nuevo más tarde.')
             } finally {
                 setLoading(false)
             }
@@ -57,24 +57,24 @@ export default function GradesPage() {
 
     return (
         <div className="container mx-auto p-4 md:p-6">
-            <h1 className="text-2xl font-semibold mb-4">Grade Fees</h1>
+            <h1 className="text-2xl font-semibold mb-4">Cuotas por Grado</h1>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Tuition and Inscription Costs per Grade</CardTitle>
+                    <CardTitle>Costos de Colegiatura e Inscripción por Grado</CardTitle>
                     {/* Add filtering by School Year if needed */}
                 </CardHeader>
                 <CardContent>
-                    {loading && <p>Loading grades...</p>}
+                    {loading && <p>Cargando grados...</p>}
                     {error && <p className="text-red-500">{error}</p>}
                     {!loading && !error && (
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Grade</TableHead>
-                                    <TableHead>School Year</TableHead>
-                                    <TableHead className="text-right">Tuition Fee</TableHead>
-                                    <TableHead className="text-right">Inscription Cost</TableHead>
+                                    <TableHead>Grado</TableHead>
+                                    <TableHead>Año Escolar</TableHead>
+                                    <TableHead className="text-right">Cuota de Colegiatura</TableHead>
+                                    <TableHead className="text-right">Costo de Inscripción</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -94,7 +94,7 @@ export default function GradesPage() {
                                 ) : (
                                     <TableRow>
                                         <TableCell colSpan={4} className="text-center">
-                                            No grades found.
+                                            No se encontraron grados.
                                         </TableCell>
                                     </TableRow>
                                 )}

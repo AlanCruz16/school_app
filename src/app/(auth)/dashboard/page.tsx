@@ -114,9 +114,9 @@ async function DashboardContent() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold">Dashboard</h1>
+                <h1 className="text-3xl font-bold">Tablero</h1>
                 <p className="text-muted-foreground">
-                    Overview of the school payment system
+                    Resumen del sistema de pagos escolares
                 </p>
             </div>
 
@@ -124,7 +124,7 @@ async function DashboardContent() {
                 <Card>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">
-                            Total Students
+                            Total de Estudiantes
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -135,7 +135,7 @@ async function DashboardContent() {
                 <Card>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">
-                            Outstanding Balance
+                            Saldo Pendiente
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -148,7 +148,7 @@ async function DashboardContent() {
                 <Card>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">
-                            Payments Received This Month
+                            Pagos Recibidos Este Mes
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -161,12 +161,12 @@ async function DashboardContent() {
                 <Card>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">
-                            Active School Year
+                            Año Escolar Activo
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            {activeSchoolYear?.name || "None"}
+                            {activeSchoolYear?.name || "Ninguno"}
                         </div>
                     </CardContent>
                 </Card>
@@ -182,12 +182,12 @@ async function DashboardContent() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Outstanding Payments</CardTitle>
+                        <CardTitle>Pagos Pendientes</CardTitle>
                     </CardHeader>
                     <CardContent>
                         {studentsWithBalance.length === 0 ? (
                             <p className="text-sm text-muted-foreground">
-                                No outstanding payments to display.
+                                No hay pagos pendientes para mostrar.
                             </p>
                         ) : (
                             <div className="space-y-4">

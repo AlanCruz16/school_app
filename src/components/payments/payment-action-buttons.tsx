@@ -31,7 +31,7 @@ export default function PaymentActionButtons({ paymentId }: PaymentActionButtons
 
         // Handle case where popup is blocked
         if (!printWindow) {
-            alert('Please allow popups to print receipts')
+            alert('Por favor, permita las ventanas emergentes para imprimir recibos')
             setIsPrinting(false)
         }
     }
@@ -45,7 +45,7 @@ export default function PaymentActionButtons({ paymentId }: PaymentActionButtons
                 disabled={isPrinting}
             >
                 <Printer className="h-4 w-4" />
-                <span className="sr-only">Print Receipt</span>
+                <span className="sr-only">Imprimir Recibo</span>
             </Button>
 
             <Button
@@ -54,7 +54,7 @@ export default function PaymentActionButtons({ paymentId }: PaymentActionButtons
                 onClick={handleViewReceipt}
             >
                 <Eye className="h-4 w-4" />
-                <span className="sr-only">View Receipt</span>
+                <span className="sr-only">Ver Recibo</span>
             </Button>
         </div>
     )

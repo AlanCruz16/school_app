@@ -57,10 +57,10 @@ export default async function EditStudentPage({
                 <Button variant="outline" size="icon" asChild>
                     <Link href={`/students/${student.id}`}>
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">Back to student</span>
+                        <span className="sr-only">Regresar al estudiante</span>
                     </Link>
                 </Button>
-                <h1 className="text-3xl font-bold">Edit Student</h1>
+                <h1 className="text-3xl font-bold">Editar Estudiante</h1>
             </div>
 
             <StudentForm

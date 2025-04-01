@@ -45,12 +45,12 @@ export default function DeleteTutorButton({
             const data = await response.json()
 
             if (!response.ok) {
-                throw new Error(data.error || 'Failed to delete tutor')
+                throw new Error(data.error || 'Error al eliminar tutor')
             }
 
             toast({
-                title: 'Tutor Deleted',
-                description: `${tutorName} has been removed successfully.`,
+                title: 'Tutor Eliminado',
+                description: `${tutorName} ha sido eliminado exitosamente.`,
             })
 
             // Redirect to tutors list
@@ -73,22 +73,22 @@ export default function DeleteTutorButton({
             <DialogTrigger asChild>
                 <Button variant="destructive">
                     <Trash className="mr-2 h-4 w-4" />
-                    Delete Tutor
+                    Eliminar Tutor
                 </Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Confirm Deletion</DialogTitle>
+                    <DialogTitle>Confirmar Eliminación</DialogTitle>
                     <DialogDescription>
-                        Are you sure you want to delete {tutorName}?
+                        ¿Está seguro que desea eliminar a {tutorName}?
                         {hasStudents ? (
                             <div className="mt-2 text-destructive">
-                                This tutor has associated students.
-                                Please reassign or remove those students first.
+                                Este tutor tiene estudiantes asociados.
+                                Por favor, reasigne o elimine esos estudiantes primero.
                             </div>
                         ) : (
                             <div className="mt-2">
-                                This action cannot be undone.
+                                Esta acción no se puede deshacer.
                             </div>
                         )}
                     </DialogDescription>
@@ -96,7 +96,7 @@ export default function DeleteTutorButton({
 
                 <DialogFooter>
                     <DialogClose asChild>
-                        <Button variant="outline">Cancel</Button>
+                        <Button variant="outline">Cancelar</Button>
                     </DialogClose>
 
                     <Button
@@ -104,7 +104,7 @@ export default function DeleteTutorButton({
                         onClick={handleDelete}
                         disabled={isDeleting || hasStudents}
                     >
-                        {isDeleting ? 'Deleting...' : 'Delete'}
+                        {isDeleting ? 'Eliminando...' : 'Eliminar'}
                     </Button>
                 </DialogFooter>
             </DialogContent>

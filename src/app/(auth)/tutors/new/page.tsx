@@ -19,10 +19,10 @@ export default async function NewTutorPage() {
                 <Button variant="outline" size="icon" asChild>
                     <Link href="/tutors">
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">Back to tutors</span>
+                        <span className="sr-only">Regresar a tutores</span>
                     </Link>
                 </Button>
-                <h1 className="text-3xl font-bold">Add New Tutor</h1>
+                <h1 className="text-3xl font-bold">Agregar Nuevo Tutor</h1>
             </div>
 
             <TutorForm />

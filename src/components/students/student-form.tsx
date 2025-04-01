@@ -71,8 +71,8 @@ export default function StudentForm({
 
         if (!name || !gradeId || !tutorId) {
             toast({
-                title: 'Validation Error',
-                description: 'Please fill out all required fields.',
+                title: 'Error de Validación',
+                description: 'Por favor, complete todos los campos obligatorios.',
                 variant: 'destructive',
             })
             return
@@ -104,16 +104,16 @@ export default function StudentForm({
 
             if (!response.ok) {
                 const error = await response.json()
-                throw new Error(error.error || 'Something went wrong')
+                throw new Error(error.error || 'Algo salió mal')
             }
 
             const result = await response.json()
 
             toast({
-                title: isEditing ? 'Student Updated' : 'Student Created',
+                title: isEditing ? 'Estudiante Actualizado' : 'Estudiante Creado',
                 description: isEditing
-                    ? `${name} has been updated successfully.`
-                    : `${name} has been added successfully.`,
+                    ? `${name} ha sido actualizado exitosamente.`
+                    : `${name} ha sido agregado exitosamente.`,
             })
 
             // Redirect to student detail page or students list
@@ -122,7 +122,7 @@ export default function StudentForm({
         } catch (error) {
             toast({
                 title: 'Error',
-                description: error instanceof Error ? error.message : 'An error occurred',
+                description: error instanceof Error ? error.message : 'Ocurrió un error',
                 variant: 'destructive',
             })
         } finally {
@@ -134,35 +134,35 @@ export default function StudentForm({
         <form onSubmit={handleSubmit}>
             <Card>
                 <CardHeader>
-                    <CardTitle>{isEditing ? 'Edit Student' : 'Add New Student'}</CardTitle>
+                    <CardTitle>{isEditing ? 'Editar Estudiante' : 'Agregar Nuevo Estudiante'}</CardTitle>
                     <CardDescription>
                         {isEditing
-                            ? 'Update student information and grade assignment'
-                            : 'Enter basic information to register a new student'
+                            ? 'Actualizar información del estudiante y asignación de grado'
+                            : 'Ingrese información básica para registrar un nuevo estudiante'
                         }
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="name">Student Name *</Label>
+                        <Label htmlFor="name">Nombre del Estudiante *</Label>
                         <Input
                             id="name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder="Enter student's full name"
+                            placeholder="Ingrese el nombre completo del estudiante"
                             required
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="grade">Grade *</Label>
+                        <Label htmlFor="grade">Grado *</Label>
                         <Select
                             value={gradeId}
                             onValueChange={setGradeId}
                             required
                         >
                             <SelectTrigger id="grade">
-                                <SelectValue placeholder="Select a grade" />
+                                <SelectValue placeholder="Seleccionar un grado" />
                             </SelectTrigger>
                             <SelectContent>
                                 {grades.map((grade) => (
@@ -175,14 +175,14 @@ export default function StudentForm({
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="tutor">Tutor/Parent *</Label>
+                        <Label htmlFor="tutor">Tutor/Padre *</Label>
                         <Select
                             value={tutorId}
                             onValueChange={setTutorId}
                             required
                         >
                             <SelectTrigger id="tutor">
-                                <SelectValue placeholder="Select a tutor" />
+                                <SelectValue placeholder="Seleccionar un tutor" />
                             </SelectTrigger>
                             <SelectContent>
                                 {tutors.map((tutor) => (
@@ -194,7 +194,7 @@ export default function StudentForm({
                         </Select>
                         <div className="text-sm text-muted-foreground mt-1">
                             <Link href="/tutors/new" className="text-primary hover:underline" target="_blank">
-                                + Add a new tutor
+                                + Agregar nuevo tutor
                             </Link>
                         </div>
                     </div>
@@ -206,7 +206,7 @@ export default function StudentForm({
                                 checked={active}
                                 onCheckedChange={setActive}
                             />
-                            <Label htmlFor="active">Student is active</Label>
+                            <Label htmlFor="active">Estudiante está activo</Label>
                         </div>
                     )}
                 </CardContent>
@@ -216,10 +216,10 @@ export default function StudentForm({
                         variant="outline"
                         onClick={() => router.back()}
                     >
-                        Cancel
+                        Cancelar
                     </Button>
                     <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? 'Saving...' : isEditing ? 'Update Student' : 'Create Student'}
+                        {isSubmitting ? 'Guardando...' : isEditing ? 'Actualizar Estudiante' : 'Crear Estudiante'}
                     </Button>
                 </CardFooter>
             </Card>

@@ -52,7 +52,7 @@ export default function TutorSearch() {
                     <div className="relative flex-1">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
-                            placeholder="Search tutors by name, email, or phone..."
+                            placeholder="Buscar tutores por nombre, correo o teléfono..."
                             className="pl-8"
                             value={query}
                             onChange={(e) => {
@@ -69,7 +69,7 @@ export default function TutorSearch() {
                             className="flex gap-2"
                         >
                             <X className="h-4 w-4" />
-                            Clear
+                            Limpiar
                         </Button>
                     )}
                 </div>

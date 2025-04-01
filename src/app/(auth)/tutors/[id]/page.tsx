@@ -63,7 +63,7 @@ async function TutorDetailContent({
                     <Button variant="outline" size="icon" asChild>
                         <Link href="/tutors">
                             <ArrowLeft className="h-4 w-4" />
-                            <span className="sr-only">Back to tutors</span>
+                            <span className="sr-only">Regresar a tutores</span>
                         </Link>
                     </Button>
                     <h1 className="text-3xl font-bold">{tutor.name}</h1>
@@ -73,7 +73,7 @@ async function TutorDetailContent({
                     <Button variant="outline" asChild>
                         <Link href={`/tutors/${tutor.id}/edit`}>
                             <Pencil className="mr-2 h-4 w-4" />
-                            Edit Tutor
+                            Editar Tutor
                         </Link>
                     </Button>
 
@@ -91,12 +91,12 @@ async function TutorDetailContent({
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <User className="h-5 w-5" />
-                            Contact Information
+                            Información de Contacto
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid gap-2">
-                            <div className="text-sm font-medium">Email</div>
+                            <div className="text-sm font-medium">Correo Electrónico</div>
                             <div className="flex items-center gap-2">
                                 <Mail className="h-4 w-4 text-muted-foreground" />
                                 <a href={`mailto:${tutor.email}`} className="hover:underline">
@@ -106,7 +106,7 @@ async function TutorDetailContent({
                         </div>
 
                         <div className="grid gap-2">
-                            <div className="text-sm font-medium">Phone</div>
+                            <div className="text-sm font-medium">Teléfono</div>
                             <div className="flex items-center gap-2">
                                 <Phone className="h-4 w-4 text-muted-foreground" />
                                 <a href={`tel:${tutor.phone}`} className="hover:underline">
@@ -116,11 +116,11 @@ async function TutorDetailContent({
                         </div>
 
                         <div className="grid gap-2">
-                            <div className="text-sm font-medium">Address</div>
+                            <div className="text-sm font-medium">Dirección</div>
                             <div className="flex items-start gap-2">
                                 <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
                                 <span>
-                                    {tutor.address || 'No address provided'}
+                                    {tutor.address || 'Dirección no proporcionada'}
                                 </span>
                             </div>
                         </div>
@@ -130,11 +130,11 @@ async function TutorDetailContent({
                 {/* Students Stats */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Students</CardTitle>
+                        <CardTitle>Estudiantes</CardTitle>
                         <CardDescription>
                             {tutor.students.length === 0
-                                ? 'No students associated with this tutor'
-                                : `This tutor is responsible for ${tutor.students.length} student${tutor.students.length === 1 ? '' : 's'}`
+                                ? 'No hay estudiantes asociados con este tutor'
+                                : `Este tutor es responsable de ${tutor.students.length} estudiante${tutor.students.length === 1 ? '' : 's'}`
                             }
                         </CardDescription>
                     </CardHeader>
@@ -144,13 +144,13 @@ async function TutorDetailContent({
                                 {tutor.students.length}
                             </div>
                             <div className="text-sm text-muted-foreground mb-4">
-                                Total Students
+                                Total de Estudiantes
                             </div>
 
                             <Button asChild>
                                 <Link href={`/students/new?tutorId=${tutor.id}`}>
                                     <Plus className="mr-2 h-4 w-4" />
-                                    Add New Student
+                                    Agregar Nuevo Estudiante
                                 </Link>
                             </Button>
                         </div>
@@ -161,9 +161,9 @@ async function TutorDetailContent({
             {/* Student List */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Associated Students</CardTitle>
+                    <CardTitle>Estudiantes Asociados</CardTitle>
                     <CardDescription>
-                        Students with {tutor.name} as their tutor
+                        Estudiantes con {tutor.name} como su tutor
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

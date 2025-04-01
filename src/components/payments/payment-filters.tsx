@@ -110,7 +110,7 @@ export default function PaymentFilters({ students, schoolYears }: PaymentFilters
                     <div className="relative">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
-                            placeholder="Search receipts..."
+                            placeholder="Buscar recibos..."
                             className="pl-8"
                             value={query}
                             onChange={(e) => {
@@ -125,10 +125,10 @@ export default function PaymentFilters({ students, schoolYears }: PaymentFilters
                         onValueChange={setStudentId}
                     >
                         <SelectTrigger>
-                            <SelectValue placeholder="All Students" />
+                            <SelectValue placeholder="Todos los Estudiantes" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all_students">All Students</SelectItem>
+                            <SelectItem value="all_students">Todos los Estudiantes</SelectItem>
                             {students.map(student => (
                                 <SelectItem key={student.id} value={student.id}>
                                     {student.name}
@@ -142,10 +142,10 @@ export default function PaymentFilters({ students, schoolYears }: PaymentFilters
                         onValueChange={setMonth}
                     >
                         <SelectTrigger>
-                            <SelectValue placeholder="All Months" />
+                            <SelectValue placeholder="Todos los Meses" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all_months">All Months</SelectItem>
+                            <SelectItem value="all_months">Todos los Meses</SelectItem>
                             {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
                                 <SelectItem key={m} value={m.toString()}>
                                     {formatMonth(m)}
@@ -159,10 +159,10 @@ export default function PaymentFilters({ students, schoolYears }: PaymentFilters
                         onValueChange={setSchoolYearId}
                     >
                         <SelectTrigger>
-                            <SelectValue placeholder="All School Years" />
+                            <SelectValue placeholder="Todos los Años Escolares" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all_years">All School Years</SelectItem>
+                            <SelectItem value="all_years">Todos los Años Escolares</SelectItem>
                             {schoolYears.map(year => (
                                 <SelectItem key={year.id} value={year.id}>
                                     {year.name}
@@ -181,7 +181,7 @@ export default function PaymentFilters({ students, schoolYears }: PaymentFilters
                             className="flex items-center gap-1"
                         >
                             <X className="h-4 w-4" />
-                            Reset Filters
+                            Restablecer Filtros
                         </Button>
                     </div>
                 )}

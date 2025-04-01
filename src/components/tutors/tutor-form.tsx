@@ -43,8 +43,8 @@ export default function TutorForm({ tutor, isEditing = false }: TutorFormProps) 
 
         if (!name || !email || !phone) {
             toast({
-                title: 'Validation Error',
-                description: 'Please fill out all required fields.',
+                title: 'Error de Validación',
+                description: 'Por favor, complete todos los campos obligatorios.',
                 variant: 'destructive',
             })
             return
@@ -54,8 +54,8 @@ export default function TutorForm({ tutor, isEditing = false }: TutorFormProps) 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRegex.test(email)) {
             toast({
-                title: 'Validation Error',
-                description: 'Please enter a valid email address.',
+                title: 'Error de Validación',
+                description: 'Por favor, ingrese una dirección de correo electrónico válida.',
                 variant: 'destructive',
             })
             return
@@ -65,8 +65,8 @@ export default function TutorForm({ tutor, isEditing = false }: TutorFormProps) 
         const phoneRegex = /^\D?(\d{3})\D?\D?(\d{3})\D?(\d{4})$/
         if (!phoneRegex.test(phone)) {
             toast({
-                title: 'Validation Error',
-                description: 'Please enter a valid phone number.',
+                title: 'Error de Validación',
+                description: 'Por favor, ingrese un número de teléfono válido.',
                 variant: 'destructive',
             })
             return
@@ -98,16 +98,16 @@ export default function TutorForm({ tutor, isEditing = false }: TutorFormProps) 
 
             if (!response.ok) {
                 const error = await response.json()
-                throw new Error(error.error || 'Something went wrong')
+                throw new Error(error.error || 'Algo salió mal')
             }
 
             const result = await response.json()
 
             toast({
-                title: isEditing ? 'Tutor Updated' : 'Tutor Created',
+                title: isEditing ? 'Tutor Actualizado' : 'Tutor Creado',
                 description: isEditing
-                    ? `${name} has been updated successfully.`
-                    : `${name} has been added successfully.`,
+                    ? `${name} ha sido actualizado exitosamente.`
+                    : `${name} ha sido agregado exitosamente.`,
             })
 
             // Redirect to tutor detail page or tutors list
@@ -116,7 +116,7 @@ export default function TutorForm({ tutor, isEditing = false }: TutorFormProps) 
         } catch (error) {
             toast({
                 title: 'Error',
-                description: error instanceof Error ? error.message : 'An error occurred',
+                description: error instanceof Error ? error.message : 'Ocurrió un error',
                 variant: 'destructive',
             })
         } finally {
@@ -128,40 +128,40 @@ export default function TutorForm({ tutor, isEditing = false }: TutorFormProps) 
         <form onSubmit={handleSubmit}>
             <Card>
                 <CardHeader>
-                    <CardTitle>{isEditing ? 'Edit Tutor' : 'Add New Tutor'}</CardTitle>
+                    <CardTitle>{isEditing ? 'Editar Tutor' : 'Agregar Nuevo Tutor'}</CardTitle>
                     <CardDescription>
                         {isEditing
-                            ? 'Update tutor information and contact details'
-                            : 'Enter contact information for a new tutor/parent'
+                            ? 'Actualizar información del tutor y detalles de contacto'
+                            : 'Ingrese información de contacto para un nuevo tutor/padre'
                         }
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="name">Full Name *</Label>
+                        <Label htmlFor="name">Nombre Completo *</Label>
                         <Input
                             id="name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder="Enter tutor's full name"
+                            placeholder="Ingrese el nombre completo del tutor"
                             required
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="email">Email Address *</Label>
+                        <Label htmlFor="email">Dirección de Correo Electrónico *</Label>
                         <Input
                             id="email"
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="email@example.com"
+                            placeholder="correo@ejemplo.com"
                             required
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number *</Label>
+                        <Label htmlFor="phone">Número de Teléfono *</Label>
                         <Input
                             id="phone"
                             value={phone}
@@ -172,12 +172,12 @@ export default function TutorForm({ tutor, isEditing = false }: TutorFormProps) 
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="address">Address</Label>
+                        <Label htmlFor="address">Dirección</Label>
                         <Textarea
                             id="address"
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
-                            placeholder="Street address, city, state, zip code"
+                            placeholder="Dirección, ciudad, estado, código postal"
                             rows={3}
                         />
                     </div>
@@ -188,10 +188,10 @@ export default function TutorForm({ tutor, isEditing = false }: TutorFormProps) 
                         variant="outline"
                         onClick={() => router.back()}
                     >
-                        Cancel
+                        Cancelar
                     </Button>
                     <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? 'Saving...' : isEditing ? 'Update Tutor' : 'Create Tutor'}
+                        {isSubmitting ? 'Guardando...' : isEditing ? 'Actualizar Tutor' : 'Crear Tutor'}
                     </Button>
                 </CardFooter>
             </Card>

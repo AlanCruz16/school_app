@@ -18,7 +18,7 @@ interface PaymentDetails {
     amount: any
     paymentDate: string | Date
     paymentMethod: PrismaPaymentMethod // Use enum type
-    forMonth: number
+    forMonth: number | null // Allow null for backward compatibility or optional payments
     forYear?: number
     isPartial: boolean
     notes?: string | null
@@ -76,7 +76,7 @@ const Receipt = ({
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Payment Receipt #${payment.receiptNumber}</title>
+                <title>Recibo de Pago #{payment.receiptNumber}</title>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1">
                 <style>
@@ -253,7 +253,10 @@ const Receipt = ({
             if (a.forYear !== b.forYear) return a.forYear - b.forYear;
         }
         // Then compare months
-        return a.forMonth - b.forMonth;
+        // Handle potentially null months, defaulting to 0 for sorting
+        const monthA = a.forMonth ?? 0;
+        const monthB = b.forMonth ?? 0;
+        return monthA - monthB;
     });
 
     // Calculate balance remaining for partial payments
@@ -264,10 +267,10 @@ const Receipt = ({
             <AutoPrintReceipt printFunction={printReceipt} />
 
             <div className="print:hidden mb-4 flex justify-between">
-                <h1 className="text-xl font-bold">Receipt #{payment.receiptNumber}</h1>
+                <h1 className="text-xl font-bold">Recibo #{payment.receiptNumber}</h1>
                 <Button variant="outline" onClick={printReceipt}>
                     <Printer className="mr-2 h-4 w-4" />
-                    Print Receipt
+                    Imprimir Recibo
                 </Button>
             </div>
 
@@ -292,33 +295,33 @@ const Receipt = ({
 
                     {/* Receipt Title */}
                     <div className="receipt-title border-t border-b border-dashed py-1 my-3 text-center font-bold uppercase text-sm">
-                        Payment Receipt
+                        Recibo de Pago
                     </div>
 
                     {/* Receipt Info */}
                     <div className="receipt-info space-y-1 text-sm">
                         <div>
-                            <span className="label">Receipt #:</span>
+                            <span className="label">Recibo #:</span>
                             <span>{payment.receiptNumber}</span>
                         </div>
                         <div>
-                            <span className="label">Date:</span>
+                            <span className="label">Fecha:</span>
                             <span>{formatDate(payment.paymentDate)}</span>
                         </div>
                         <div>
-                            <span className="label">Student:</span>
+                            <span className="label">Estudiante:</span>
                             <span>{payment.student.name}</span>
                         </div>
                         <div>
-                            <span className="label">Grade:</span>
+                            <span className="label">Grado:</span>
                             <span>{payment.student.grade.name}</span>
                         </div>
                         <div>
-                            <span className="label">School Year:</span>
+                            <span className="label">Año Escolar:</span>
                             <span>{payment.schoolYear.name}</span>
                         </div>
                         <div>
-                            <span className="label">Payment Method:</span>
+                            <span className="label">Método de Pago:</span>
                             {/* Use the display map, fallback to raw value if not found */}
                             <span>{paymentMethodDisplayMap[payment.paymentMethod] || payment.paymentMethod}</span>
                         </div>
@@ -331,12 +334,12 @@ const Receipt = ({
                         {/* Payment breakdown table for multiple months */}
                         {isMultiMonthPayment && (
                             <div className="mt-2 w-full">
-                                <div className="label mb-1">Payment Breakdown:</div>
+                                <div className="label mb-1">Desglose de Pago:</div>
                                 <table className="w-full text-sm">
                                     <thead>
                                         <tr>
-                                            <th>Month</th>
-                                            <th className="text-right">Amount</th>
+                                            <th>Mes</th>
+                                            <th className="text-right">Monto</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -352,7 +355,8 @@ const Receipt = ({
                                             })
                                             .map((p, index) => (
                                                 <tr key={`payment-${index}-${p.forMonth}-${p.forYear || ''}`}>
-                                                    <td>{formatMonth(p.forMonth)} {p.forYear}</td>
+                                                    {/* Handle potential null forMonth */}
+                                                    <td>{p.forMonth ? formatMonth(p.forMonth) : 'N/A'} {p.forYear}</td>
                                                     <td className="text-right">
                                                         {formatCurrency(
                                                             typeof p.amount === 'object'
@@ -373,11 +377,11 @@ const Receipt = ({
                         {payment.isPartial && !isMultiMonthPayment && (
                             <>
                                 <div>
-                                    <span className="label">Monthly Fee:</span>
+                                    <span className="label">Cuota Mensual:</span>
                                     <span>{formatCurrency(tuitionAmount)}</span>
                                 </div>
                                 <div>
-                                    <span className="label">Balance Remaining:</span>
+                                    <span className="label">Saldo Restante:</span>
                                     <span>{formatCurrency(balanceRemaining)}</span>
                                 </div>
                             </>
@@ -385,7 +389,7 @@ const Receipt = ({
 
                         {payment.notes && (
                             <div>
-                                <span className="label">Notes:</span>
+                                <span className="label">Notas:</span>
                                 <span>{payment.notes}</span>
                             </div>
                         )}
@@ -393,14 +397,14 @@ const Receipt = ({
 
                     {/* Receipt Total */}
                     <div className="receipt-total border-t border-dashed pt-2 mt-3 font-bold">
-                        <span>TOTAL PAID:</span>
+                        <span>TOTAL PAGADO:</span>
                         <span>{formatCurrency(totalAmount)}</span>
                     </div>
 
                     {/* Receipt Footer */}
                     <div className="receipt-footer border-t border-dashed pt-2 mt-3 text-center text-sm">
-                        <p>Processed by: {payment.clerk.name}</p>
-                        <p>Thank you!</p>
+                        <p>Procesado por: {payment.clerk.name}</p>
+                        <p>¡Gracias!</p>
                     </div>
                 </div>
             </Card>

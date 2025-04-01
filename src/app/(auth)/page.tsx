@@ -9,9 +9,9 @@ export default async function DashboardPage() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold">Dashboard</h1>
+                <h1 className="text-3xl font-bold">Tablero</h1>
                 <p className="text-muted-foreground">
-                    Overview of the school payment system
+                    Resumen del sistema de pagos escolares
                 </p>
             </div>
 
@@ -19,7 +19,7 @@ export default async function DashboardPage() {
                 <Card>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">
-                            Total Students
+                            Total de Estudiantes
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -29,7 +29,7 @@ export default async function DashboardPage() {
                 <Card>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">
-                            Outstanding Balance
+                            Saldo Pendiente
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -39,7 +39,7 @@ export default async function DashboardPage() {
                 <Card>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">
-                            Payments This Month
+                            Pagos Este Mes
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -49,7 +49,7 @@ export default async function DashboardPage() {
                 <Card>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">
-                            Active School Year
+                            Año Escolar Activo
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -61,21 +61,21 @@ export default async function DashboardPage() {
             <div className="grid gap-6 md:grid-cols-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Recent Payments</CardTitle>
+                        <CardTitle>Pagos Recientes</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <p className="text-sm text-muted-foreground">
-                            No recent payments to display.
+                            No hay pagos recientes para mostrar.
                         </p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader>
-                        <CardTitle>Outstanding Payments</CardTitle>
+                        <CardTitle>Pagos Pendientes</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <p className="text-sm text-muted-foreground">
-                            No outstanding payments to display.
+                            No hay pagos pendientes para mostrar.
                         </p>
                     </CardContent>
                 </Card>

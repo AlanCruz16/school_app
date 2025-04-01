@@ -54,15 +54,15 @@ async function TutorsContent({
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold">Tutors</h1>
+                    <h1 className="text-3xl font-bold">Tutores</h1>
                     <p className="text-muted-foreground">
-                        Manage tutor records and contact information
+                        Gestionar registros de tutores e información de contacto
                     </p>
                 </div>
                 <Button asChild>
                     <Link href="/tutors/new">
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Tutor
+                        Agregar Tutor
                     </Link>
                 </Button>
             </div>

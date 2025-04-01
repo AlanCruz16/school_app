@@ -88,9 +88,9 @@ export default function StudentSelector() {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Select Student</CardTitle>
+                <CardTitle>Seleccionar Estudiante</CardTitle>
                 <CardDescription>
-                    Choose a student to record a payment
+                    Elija un estudiante para registrar un pago
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -98,7 +98,7 @@ export default function StudentSelector() {
                     <div className="relative flex-1">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
-                            placeholder="Search by student name..."
+                            placeholder="Buscar por nombre de estudiante..."
                             className="pl-8"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
@@ -108,7 +108,7 @@ export default function StudentSelector() {
                     <Button asChild>
                         <Link href="/students/new">
                             <UserPlus className="mr-2 h-4 w-4" />
-                            New Student
+                            Nuevo Estudiante
                         </Link>
                     </Button>
                 </div>
@@ -118,24 +118,24 @@ export default function StudentSelector() {
                         <Table>
                             <TableHeader className="sticky top-0 bg-card z-10">
                                 <TableRow>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Grade</TableHead>
+                                    <TableHead>Nombre</TableHead>
+                                    <TableHead>Grado</TableHead>
                                     <TableHead>Tutor</TableHead>
-                                    <TableHead className="text-right">Balance</TableHead>
-                                    <TableHead className="text-right">Action</TableHead>
+                                    <TableHead className="text-right">Saldo</TableHead>
+                                    <TableHead className="text-right">Acción</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {loading ? (
                                     <TableRow>
                                         <TableCell colSpan={5} className="text-center py-4">
-                                            Loading students...
+                                            Cargando estudiantes...
                                         </TableCell>
                                     </TableRow>
                                 ) : students.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={5} className="text-center py-4">
-                                            {query ? 'No students found matching your search' : 'No active students found'}
+                                            {query ? 'No se encontraron estudiantes que coincidan con su búsqueda' : 'No se encontraron estudiantes activos'}
                                         </TableCell>
                                     </TableRow>
                                 ) : (
@@ -144,8 +144,8 @@ export default function StudentSelector() {
                                             <TableCell className="font-medium">
                                                 {student.name}
                                             </TableCell>
-                                            <TableCell>{student.grade?.name || 'No grade assigned'}</TableCell>
-                                            <TableCell>{student.tutor?.name || 'No tutor assigned'}</TableCell>
+                                            <TableCell>{student.grade?.name || 'Sin grado asignado'}</TableCell>
+                                            <TableCell>{student.tutor?.name || 'Sin tutor asignado'}</TableCell>
                                             <TableCell className="text-right">
                                                 <span className={`font-medium ${student.balance && parseFloat(student.balance.toString()) > 0 ? 'text-destructive' : ''}`}>
                                                     {formatCurrency(student.balance ? parseFloat(student.balance.toString()) : 0)}
@@ -156,7 +156,7 @@ export default function StudentSelector() {
                                                     onClick={() => selectStudent(student.id)}
                                                     size="sm"
                                                 >
-                                                    Select
+                                                    Seleccionar
                                                 </Button>
                                             </TableCell>
                                         </TableRow>

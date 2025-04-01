@@ -59,8 +59,8 @@ export default function BalanceAdjustment({
 
         if (!amount || parseFloat(amount) <= 0) {
             toast({
-                title: 'Invalid Amount',
-                description: 'Please enter a valid amount greater than zero.',
+                title: 'Monto Inválido',
+                description: 'Por favor, ingrese un monto válido mayor que cero.',
                 variant: 'destructive'
             })
             return
@@ -87,12 +87,12 @@ export default function BalanceAdjustment({
 
             if (!response.ok) {
                 const error = await response.json()
-                throw new Error(error.error || 'Failed to update balance')
+                throw new Error(error.error || 'Error al actualizar el saldo')
             }
 
             toast({
-                title: 'Balance Updated',
-                description: `${studentName}'s balance has been ${adjustmentType === 'increase' ? 'increased' : 'decreased'} by ${formatCurrency(adjustmentAmount)}.`,
+                title: 'Saldo Actualizado',
+                description: `El saldo de ${studentName} ha sido ${adjustmentType === 'increase' ? 'aumentado' : 'disminuido'} en ${formatCurrency(adjustmentAmount)}.`,
             })
 
             // Close dialog and refresh page
@@ -103,7 +103,7 @@ export default function BalanceAdjustment({
         } catch (error) {
             toast({
                 title: 'Error',
-                description: error instanceof Error ? error.message : 'An error occurred',
+                description: error instanceof Error ? error.message : 'Ocurrió un error',
                 variant: 'destructive',
             })
         } finally {
@@ -128,12 +128,12 @@ export default function BalanceAdjustment({
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.error || 'Failed to sync balance');
+                throw new Error(error.error || 'Error al sincronizar el saldo');
             }
 
             toast({
-                title: 'Balance Synced',
-                description: `${studentName}'s balance has been updated to match the expected amount.`,
+                title: 'Saldo Sincronizado',
+                description: `El saldo de ${studentName} ha sido actualizado para coincidir con el monto esperado.`,
             });
 
             // Call the provided callback if it exists
@@ -158,17 +158,17 @@ export default function BalanceAdjustment({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline">Adjust Balance</Button>
+                <Button variant="outline">Ajustar Saldo</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
-                        <DialogTitle>Adjust Student Balance</DialogTitle>
+                        <DialogTitle>Ajustar Saldo del Estudiante</DialogTitle>
                         <DialogDescription>
-                            Current balance: {formatCurrency(currentBalance)}
+                            Saldo actual: {formatCurrency(currentBalance)}
                             {expectedBalance && expectedBalance > currentBalance && (
                                 <div className="mt-1 text-yellow-600">
-                                    Expected balance: {formatCurrency(expectedBalance)}
+                                    Saldo esperado: {formatCurrency(expectedBalance)}
                                 </div>
                             )}
                         </DialogDescription>
@@ -179,9 +179,9 @@ export default function BalanceAdjustment({
                             <div className="bg-yellow-50 p-3 rounded-md border border-yellow-200">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <h4 className="font-medium text-sm text-yellow-800">Expected Higher Balance</h4>
+                                        <h4 className="font-medium text-sm text-yellow-800">Saldo Esperado Mayor</h4>
                                         <p className="text-xs text-yellow-700 mt-1">
-                                            Based on the school year schedule, this student should have a balance of {formatCurrency(expectedBalance)}.
+                                            Según el calendario del año escolar, este estudiante debería tener un saldo de {formatCurrency(expectedBalance)}.
                                         </p>
                                     </div>
                                     <Button
@@ -193,33 +193,33 @@ export default function BalanceAdjustment({
                                         disabled={isSyncing}
                                     >
                                         <RefreshCw className="h-4 w-4 mr-1" />
-                                        {isSyncing ? 'Syncing...' : 'Sync Balance'}
+                                        {isSyncing ? 'Sincronizando...' : 'Sincronizar Saldo'}
                                     </Button>
                                 </div>
                             </div>
                         )}
 
                         <div className="grid gap-2">
-                            <Label htmlFor="adjustment-type">Adjustment Type</Label>
+                            <Label htmlFor="adjustment-type">Tipo de Ajuste</Label>
                             <Select
                                 value={adjustmentType}
                                 onValueChange={(value) => setAdjustmentType(value as AdjustmentType)}
                                 required
                             >
                                 <SelectTrigger id="adjustment-type">
-                                    <SelectValue placeholder="Select type" />
+                                    <SelectValue placeholder="Seleccionar tipo" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="increase">
                                         <div className="flex items-center">
                                             <PlusCircle className="h-4 w-4 mr-2 text-destructive" />
-                                            <span>Increase Balance (Add Charge)</span>
+                                            <span>Aumentar Saldo (Agregar Cargo)</span>
                                         </div>
                                     </SelectItem>
                                     <SelectItem value="decrease">
                                         <div className="flex items-center">
                                             <MinusCircle className="h-4 w-4 mr-2 text-green-600" />
-                                            <span>Decrease Balance (Credit)</span>
+                                            <span>Disminuir Saldo (Crédito)</span>
                                         </div>
                                     </SelectItem>
                                 </SelectContent>
@@ -227,7 +227,7 @@ export default function BalanceAdjustment({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="amount">Amount</Label>
+                            <Label htmlFor="amount">Monto</Label>
                             <div className="relative">
                                 <span className="absolute left-3 top-2.5">$</span>
                                 <Input
@@ -245,12 +245,12 @@ export default function BalanceAdjustment({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="reason">Reason (optional)</Label>
+                            <Label htmlFor="reason">Motivo (opcional)</Label>
                             <Textarea
                                 id="reason"
                                 value={reason}
                                 onChange={(e) => setReason(e.target.value)}
-                                placeholder="Reason for balance adjustment"
+                                placeholder="Motivo del ajuste de saldo"
                                 rows={3}
                             />
                         </div>
@@ -263,14 +263,14 @@ export default function BalanceAdjustment({
                             disabled={isSubmitting || isSyncing}
                             className="mr-auto"
                         >
-                            Cancel
+                            Cancelar
                         </Button>
                         <Button
                             type="submit"
                             disabled={isSubmitting || isSyncing}
                             variant={adjustmentType === 'increase' ? 'destructive' : 'default'}
                         >
-                            {isSubmitting ? 'Updating...' : 'Update Balance'}
+                            {isSubmitting ? 'Actualizando...' : 'Actualizar Saldo'}
                         </Button>
                     </DialogFooter>
                 </form>

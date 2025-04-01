@@ -14,7 +14,7 @@ interface Payment {
     id: string
     studentId: string
     amount: any // This allows for Prisma Decimal type
-    forMonth: number
+    forMonth: number | null // Allow null for backward compatibility or optional payments
     forYear?: number // Added to handle year information
     isPartial: boolean
     schoolYearId: string // Added to relate to school year
@@ -121,29 +121,29 @@ export default function PaymentSummary({
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Payment Summary - {formatMonthYear(selectedMonthYear)}</CardTitle>
+                <CardTitle>Resumen de Pagos - {formatMonthYear(selectedMonthYear)}</CardTitle>
                 <CardDescription>
-                    Overview of payment status for {formatMonthYear(selectedMonthYear)}
+                    Resumen del estado de pagos para {formatMonthYear(selectedMonthYear)}
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-3 gap-4 mb-6">
                     <div className="text-center p-4 bg-green-50 rounded-lg">
                         <div className="text-2xl font-bold text-green-600">{paidStudents}</div>
-                        <div className="text-sm text-muted-foreground">Fully Paid</div>
+                        <div className="text-sm text-muted-foreground">Pagado Completo</div>
                     </div>
                     <div className="text-center p-4 bg-yellow-50 rounded-lg">
                         <div className="text-2xl font-bold text-yellow-600">{partialStudents}</div>
-                        <div className="text-sm text-muted-foreground">Partially Paid</div>
+                        <div className="text-sm text-muted-foreground">Pagado Parcial</div>
                     </div>
                     <div className="text-center p-4 bg-gray-50 rounded-lg">
                         <div className="text-2xl font-bold text-gray-600">{unpaidStudents}</div>
-                        <div className="text-sm text-muted-foreground">Unpaid</div>
+                        <div className="text-sm text-muted-foreground">No Pagado</div>
                     </div>
                 </div>
 
                 <div className="mb-6">
-                    <div className="text-lg font-medium mb-2">School Year Navigation</div>
+                    <div className="text-lg font-medium mb-2">Navegación del Año Escolar</div>
                     <div className="flex flex-wrap gap-2">
                         {allMonthYears.map(monthYear => {
                             // Check if there are any payments for this month-year
@@ -173,7 +173,7 @@ export default function PaymentSummary({
                 </div>
 
                 <div className="flex items-center justify-between mb-4">
-                    <div className="text-lg font-medium">Recent Payments</div>
+                    <div className="text-lg font-medium">Pagos Recientes</div>
                     <div className="text-lg font-bold">
                         {formatCurrency(totalCollected)}
                     </div>
@@ -181,7 +181,7 @@ export default function PaymentSummary({
 
                 {paymentsForMonthYear.length === 0 ? (
                     <div className="text-center py-4 text-muted-foreground">
-                        No payments recorded for {formatMonthYear(selectedMonthYear)}
+                        No hay pagos registrados para {formatMonthYear(selectedMonthYear)}
                     </div>
                 ) : (
                     <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
@@ -218,7 +218,7 @@ export default function PaymentSummary({
             <CardFooter>
                 <Button asChild variant="outline" className="w-full">
                     <Link href="/calendar" className="flex items-center justify-center">
-                        View Full Calendar
+                        Ver Calendario Completo
                         <ChevronRight className="ml-1 h-4 w-4" />
                     </Link>
                 </Button>

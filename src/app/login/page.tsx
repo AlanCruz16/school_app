@@ -10,30 +10,30 @@ export default function LoginPage() {
         <div className="flex items-center justify-center min-h-screen bg-background px-4">
             <Card className="w-full max-w-md">
                 <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold">School Payment System</CardTitle>
+                    <CardTitle className="text-2xl font-bold">Sistema de Pago Escolar</CardTitle>
                     <CardDescription>
-                        Enter your credentials to access the administrative panel
+                        Ingrese sus credenciales para acceder al panel administrativo
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
+                            <Label htmlFor="email">Correo Electrónico</Label>
                             <Input id="email" name="email" type="email" required placeholder="admin@school.com" />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
+                            <Label htmlFor="password">Contraseña</Label>
                             <Input id="password" name="password" type="password" required />
                         </div>
                         <Button className="w-full" formAction={login} type="submit">
-                            Sign in
+                            Iniciar Sesión
                         </Button>
                     </form>
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-4">
                     <div className="text-sm text-center text-muted-foreground">
                         <p>
-                            Don&apos;t have an account? Contact your administrator.
+                            ¿No tiene una cuenta? Contacte a su administrador.
                         </p>
                     </div>
                 </CardFooter>

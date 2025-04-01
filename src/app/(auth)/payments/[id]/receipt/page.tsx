@@ -49,7 +49,8 @@ export default async function ReceiptPage({ params }: ReceiptPageProps) {
         include: {
             student: {
                 include: {
-                    grade: true
+                    grade: true,
+                    tutor: true // Added tutor include here
                 }
             },
             schoolYear: true,
@@ -70,10 +71,10 @@ export default async function ReceiptPage({ params }: ReceiptPageProps) {
                     <Button variant="outline" size="icon" asChild>
                         <Link href="/payments">
                             <ArrowLeft className="h-4 w-4" />
-                            <span className="sr-only">Back to payments</span>
+                            <span className="sr-only">Regresar a pagos</span>
                         </Link>
                     </Button>
-                    <h1 className="text-3xl font-bold">Receipt #{payment.receiptNumber}</h1>
+                    <h1 className="text-3xl font-bold">Recibo #{payment.receiptNumber}</h1>
                 </div>
 
                 {/* <div className="print:hidden">
@@ -83,8 +84,8 @@ export default async function ReceiptPage({ params }: ReceiptPageProps) {
 
             <Receipt
                 payment={enhancedPayment}
-                schoolName="School Payment System"
-                schoolAddress="123 Education Lane, Schooltown"
+                schoolName="Sistema de Pago Escolar"
+                schoolAddress="Calle Educación 123, Ciudad Aprendizaje"
                 schoolPhone="(123) 456-7890"
                 schoolEmail="admin@school.edu"
             />

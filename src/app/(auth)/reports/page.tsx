@@ -7,7 +7,7 @@ export default function ReportsPage() {
         <div className="container mx-auto p-4 md:p-6">
             <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
                 <List className="h-6 w-6" />
-                Reports Dashboard
+                Tablero de Reportes
             </h1>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -16,13 +16,13 @@ export default function ReportsPage() {
                     <Card className="h-full">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-lg font-semibold">
-                                Outstanding Balances
+                                Saldos Pendientes
                             </CardTitle>
                             <FileText className="h-5 w-5 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
                             <CardDescription>
-                                View students with pending payments.
+                                Ver estudiantes con pagos pendientes.
                             </CardDescription>
                         </CardContent>
                     </Card>
@@ -33,13 +33,13 @@ export default function ReportsPage() {
                     <Card className="h-full">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-lg font-semibold">
-                                Payments by Method
+                                Pagos por Método
                             </CardTitle>
                             <Banknote className="h-5 w-5 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
                             <CardDescription>
-                                See the last 10 payments for each payment method.
+                                Ver los últimos 10 pagos para cada método de pago.
                             </CardDescription>
                         </CardContent>
                     </Card>

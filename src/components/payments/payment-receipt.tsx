@@ -45,26 +45,26 @@ export default function PaymentReceipt({ payment }: PaymentReceiptProps) {
         <div ref={receiptRef} className="space-y-6 print:p-0">
             {/* School Header (would have logo in production) */}
             <div className="text-center space-y-1">
-                <h1 className="text-xl font-bold">School Payment System</h1>
-                <p className="text-sm text-muted-foreground">123 Education St, Learning City</p>
+                <h1 className="text-xl font-bold">Sistema de Pago Escolar</h1>
+                <p className="text-sm text-muted-foreground">Calle Educación 123, Ciudad Aprendizaje</p>
             </div>
 
             {/* Receipt Details */}
             <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <h3 className="text-sm font-semibold">Receipt Information</h3>
+                        <h3 className="text-sm font-semibold">Información del Recibo</h3>
                         <div className="mt-1 space-y-1">
                             <p className="text-sm">
-                                <span className="font-medium">Date: </span>
+                                <span className="font-medium">Fecha: </span>
                                 {formatDate(payment.paymentDate)}
                             </p>
                             <p className="text-sm">
-                                <span className="font-medium">Receipt #: </span>
+                                <span className="font-medium">Recibo #: </span>
                                 {payment.receiptNumber}
                             </p>
                             <p className="text-sm">
-                                <span className="font-medium">Payment Method: </span>
+                                <span className="font-medium">Método de Pago: </span>
                                 {/* Use display map */}
                                 {paymentMethodDisplayMap[payment.paymentMethod] || payment.paymentMethod}
                             </p>
@@ -72,14 +72,14 @@ export default function PaymentReceipt({ payment }: PaymentReceiptProps) {
                     </div>
 
                     <div>
-                        <h3 className="text-sm font-semibold">Student Information</h3>
+                        <h3 className="text-sm font-semibold">Información del Estudiante</h3>
                         <div className="mt-1 space-y-1">
                             <p className="text-sm">
-                                <span className="font-medium">Name: </span>
+                                <span className="font-medium">Nombre: </span>
                                 {payment.student.name}
                             </p>
                             <p className="text-sm">
-                                <span className="font-medium">Grade: </span>
+                                <span className="font-medium">Grado: </span>
                                 {payment.student.grade?.name || 'N/A'}
                             </p>
                             <p className="text-sm">
@@ -92,13 +92,13 @@ export default function PaymentReceipt({ payment }: PaymentReceiptProps) {
 
                 {/* Payment Details */}
                 <div className="mt-6">
-                    <h3 className="text-sm font-semibold">Payment Details</h3>
+                    <h3 className="text-sm font-semibold">Detalles del Pago</h3>
                     <div className="mt-2 border rounded-md overflow-hidden">
                         <table className="min-w-full divide-y divide-border">
                             <thead className="bg-muted">
                                 <tr>
-                                    <th scope="col" className="px-4 py-2 text-left text-xs font-medium">Description</th>
-                                    <th scope="col" className="px-4 py-2 text-right text-xs font-medium">Amount</th>
+                                    <th scope="col" className="px-4 py-2 text-left text-xs font-medium">Descripción</th>
+                                    <th scope="col" className="px-4 py-2 text-right text-xs font-medium">Monto</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
@@ -106,16 +106,16 @@ export default function PaymentReceipt({ payment }: PaymentReceiptProps) {
                                     <td className="px-4 py-3 text-sm">
                                         {/* Display Concept based on type */}
                                         {payment.paymentType === PaymentType.TUITION && payment.forMonth
-                                            ? `Tuition - ${formatMonth(payment.forMonth)} ${payment.forYear || ''}`.trim()
+                                            ? `Colegiatura - ${formatMonth(payment.forMonth)} ${payment.forYear || ''}`.trim()
                                             : payment.paymentType === PaymentType.INSCRIPTION
-                                                ? `Inscription ${payment.forYear || ''}`.trim()
+                                                ? `Inscripción ${payment.forYear || ''}`.trim()
                                                 : payment.paymentType === PaymentType.OPTIONAL
-                                                    ? payment.description || 'Optional Payment'
+                                                    ? payment.description || 'Pago Opcional'
                                                     : payment.forMonth // Fallback for older data
-                                                        ? `Tuition - ${formatMonth(payment.forMonth)} ${payment.forYear || ''}`.trim()
-                                                        : 'Payment'
+                                                        ? `Colegiatura - ${formatMonth(payment.forMonth)} ${payment.forYear || ''}`.trim()
+                                                        : 'Pago'
                                         }
-                                        {payment.isPartial && <span className="text-muted-foreground ml-1">(Partial)</span>}
+                                        {payment.isPartial && <span className="text-muted-foreground ml-1">(Parcial)</span>}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-right font-medium">
                                         {formatCurrency(parseFloat(payment.amount.toString()))}
@@ -124,7 +124,7 @@ export default function PaymentReceipt({ payment }: PaymentReceiptProps) {
                                 {payment.notes && (
                                     <tr>
                                         <td colSpan={2} className="px-4 py-2 text-xs text-muted-foreground">
-                                            <span className="font-medium">Notes: </span>
+                                            <span className="font-medium">Notas: </span>
                                             {payment.notes}
                                         </td>
                                     </tr>
@@ -145,13 +145,13 @@ export default function PaymentReceipt({ payment }: PaymentReceiptProps) {
                 {/* Receipt Footer */}
                 <div className="mt-8 flex justify-between items-center text-sm">
                     <div>
-                        <p className="font-medium">Received by:</p>
+                        <p className="font-medium">Recibido por:</p>
                         <p>{payment.clerk.name}</p>
                     </div>
 
                     <div className="text-right">
-                        <p className="font-medium">Official Receipt</p>
-                        <p className="text-xs text-muted-foreground">Issued on {formatDate(payment.paymentDate)}</p>
+                        <p className="font-medium">Recibo Oficial</p>
+                        <p className="text-xs text-muted-foreground">Emitido el {formatDate(payment.paymentDate)}</p>
                     </div>
                 </div>
             </div>

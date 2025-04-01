@@ -35,7 +35,7 @@ export default function TutorStudentsList({ students }: TutorStudentsListProps) 
     if (students.length === 0) {
         return (
             <div className="text-center py-8 text-muted-foreground">
-                No students are associated with this tutor.
+                No hay estudiantes asociados con este tutor.
             </div>
         )
     }
@@ -46,11 +46,11 @@ export default function TutorStudentsList({ students }: TutorStudentsListProps) 
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Grade</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Balance</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead>Nombre</TableHead>
+                            <TableHead>Grado</TableHead>
+                            <TableHead>Estado</TableHead>
+                            <TableHead className="text-right">Saldo</TableHead>
+                            <TableHead className="text-right">Acciones</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -69,9 +69,9 @@ export default function TutorStudentsList({ students }: TutorStudentsListProps) 
                                 </TableCell>
                                 <TableCell>
                                     {student.active ? (
-                                        <Badge variant="default">Active</Badge>
+                                        <Badge variant="default">Activo</Badge>
                                     ) : (
-                                        <Badge variant="secondary">Inactive</Badge>
+                                        <Badge variant="secondary">Inactivo</Badge>
                                     )}
                                 </TableCell>
                                 <TableCell className="text-right">
@@ -88,7 +88,7 @@ export default function TutorStudentsList({ students }: TutorStudentsListProps) 
                                         >
                                             <Link href={`/payments/new?studentId=${student.id}`}>
                                                 <CreditCard className="h-4 w-4" />
-                                                <span className="sr-only">New Payment</span>
+                                                <span className="sr-only">Nuevo Pago</span>
                                             </Link>
                                         </Button>
                                         <Button
@@ -98,7 +98,7 @@ export default function TutorStudentsList({ students }: TutorStudentsListProps) 
                                         >
                                             <Link href={`/students/${student.id}/edit`}>
                                                 <Pencil className="h-4 w-4" />
-                                                <span className="sr-only">Edit Student</span>
+                                                <span className="sr-only">Editar Estudiante</span>
                                             </Link>
                                         </Button>
                                     </div>

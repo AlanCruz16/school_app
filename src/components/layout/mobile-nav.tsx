@@ -19,13 +19,13 @@ import {
 } from 'lucide-react'
 
 const mobileLinks = [
-    { name: 'Dashboard', href: '/', icon: Home },
-    { name: 'Students', href: '/students', icon: Users },
-    { name: 'Payments', href: '/payments', icon: CreditCard },
-    { name: 'Calendar', href: '/calendar', icon: CalendarDays },
-    { name: 'Tutors', href: '/tutors', icon: User },
-    { name: 'Grades', href: '/grades', icon: GraduationCap },
-    { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'Tablero', href: '/', icon: Home },
+    { name: 'Estudiantes', href: '/students', icon: Users },
+    { name: 'Pagos', href: '/payments', icon: CreditCard },
+    { name: 'Calendario', href: '/calendar', icon: CalendarDays },
+    { name: 'Tutores', href: '/tutors', icon: User },
+    { name: 'Grados', href: '/grades', icon: GraduationCap },
+    { name: 'Configuración', href: '/settings', icon: Settings },
 ]
 
 export default function MobileNav() {
@@ -41,7 +41,7 @@ export default function MobileNav() {
                 onClick={() => setOpen(true)}
             >
                 <Menu className="h-6 w-6" />
-                <span className="sr-only">Open menu</span>
+                <span className="sr-only">Abrir menú</span>
             </Button>
             {open && (
                 <div className="fixed inset-0 z-50 bg-background">
@@ -54,7 +54,7 @@ export default function MobileNav() {
                                 onClick={() => setOpen(false)}
                             >
                                 <X className="h-6 w-6" />
-                                <span className="sr-only">Close menu</span>
+                                <span className="sr-only">Cerrar menú</span>
                             </Button>
                         </div>
                         <nav className="flex-1 px-4 py-6 overflow-y-auto">

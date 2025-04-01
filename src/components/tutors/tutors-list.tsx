@@ -66,12 +66,12 @@ export default function TutorsList({ tutors }: TutorsListProps) {
             const data = await response.json()
 
             if (!response.ok) {
-                throw new Error(data.error || 'Failed to delete tutor')
+                throw new Error(data.error || 'Error al eliminar tutor')
             }
 
             toast({
-                title: 'Tutor Deleted',
-                description: `${tutorToDelete.name} has been removed successfully.`,
+                title: 'Tutor Eliminado',
+                description: `${tutorToDelete.name} ha sido eliminado exitosamente.`,
             })
 
             router.refresh()
@@ -92,9 +92,9 @@ export default function TutorsList({ tutors }: TutorsListProps) {
             <Card>
                 <CardContent className="py-10">
                     <div className="text-center">
-                        <p className="text-muted-foreground">No tutors found</p>
+                        <p className="text-muted-foreground">No se encontraron tutores</p>
                         <p className="text-sm text-muted-foreground mt-1">
-                            Try adjusting your search or add a new tutor
+                            Intente ajustar su búsqueda o agregue un nuevo tutor
                         </p>
                     </div>
                 </CardContent>
@@ -109,11 +109,11 @@ export default function TutorsList({ tutors }: TutorsListProps) {
                     <Table>
                         <TableHeader className="sticky top-0 bg-card z-10">
                             <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Contact Information</TableHead>
-                                <TableHead>Address</TableHead>
-                                <TableHead className="text-center">Students</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead>Nombre</TableHead>
+                                <TableHead>Información de Contacto</TableHead>
+                                <TableHead>Dirección</TableHead>
+                                <TableHead className="text-center">Estudiantes</TableHead>
+                                <TableHead className="text-right">Acciones</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -134,7 +134,7 @@ export default function TutorsList({ tutors }: TutorsListProps) {
                                         </div>
                                     </TableCell>
                                     <TableCell className="max-w-[200px] truncate">
-                                        {tutor.address || 'Not provided'}
+                                        {tutor.address || 'No proporcionada'}
                                     </TableCell>
                                     <TableCell className="text-center">
                                         <Link
@@ -150,14 +150,14 @@ export default function TutorsList({ tutors }: TutorsListProps) {
                                             <DropdownMenuTrigger asChild>
                                                 <Button variant="ghost" size="icon">
                                                     <MoreHorizontal className="h-4 w-4" />
-                                                    <span className="sr-only">Open menu</span>
+                                                    <span className="sr-only">Abrir menú</span>
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuItem asChild>
                                                     <Link href={`/tutors/${tutor.id}/edit`}>
                                                         <Pencil className="mr-2 h-4 w-4" />
-                                                        Edit
+                                                        Editar
                                                     </Link>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem
@@ -166,7 +166,7 @@ export default function TutorsList({ tutors }: TutorsListProps) {
                                                     disabled={tutor._count.students > 0}
                                                 >
                                                     <Trash className="mr-2 h-4 w-4" />
-                                                    Delete
+                                                    Eliminar
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -179,7 +179,7 @@ export default function TutorsList({ tutors }: TutorsListProps) {
             </CardContent>
             <CardFooter className="py-4">
                 <div className="text-sm text-muted-foreground">
-                    Total: {tutors.length} tutors
+                    Total: {tutors.length} tutores
                 </div>
             </CardFooter>
 
@@ -187,17 +187,17 @@ export default function TutorsList({ tutors }: TutorsListProps) {
             <Dialog open={!!tutorToDelete} onOpenChange={(open) => !open && setTutorToDelete(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Confirm Deletion</DialogTitle>
+                        <DialogTitle>Confirmar Eliminación</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to delete {tutorToDelete?.name}?
+                            ¿Está seguro que desea eliminar a {tutorToDelete?.name}?
                             {tutorToDelete?._count.students ? (
                                 <div className="mt-2 text-destructive">
-                                    This tutor has {tutorToDelete._count.students} associated students.
-                                    Please reassign or remove those students first.
+                                    Este tutor tiene {tutorToDelete._count.students} estudiantes asociados.
+                                    Por favor, reasigne o elimine esos estudiantes primero.
                                 </div>
                             ) : (
                                 <div className="mt-2">
-                                    This action cannot be undone.
+                                    Esta acción no se puede deshacer.
                                 </div>
                             )}
                         </DialogDescription>
@@ -205,7 +205,7 @@ export default function TutorsList({ tutors }: TutorsListProps) {
 
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
+                            <Button variant="outline">Cancelar</Button>
                         </DialogClose>
 
                         <Button
@@ -213,7 +213,7 @@ export default function TutorsList({ tutors }: TutorsListProps) {
                             onClick={handleDelete}
                             disabled={isDeleting || (tutorToDelete?._count.students ?? 0) > 0}
                         >
-                            {isDeleting ? 'Deleting...' : 'Delete'}
+                            {isDeleting ? 'Eliminando...' : 'Eliminar'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

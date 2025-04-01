@@ -34,10 +34,10 @@ export default async function EditTutorPage({
                 <Button variant="outline" size="icon" asChild>
                     <Link href={`/tutors/${tutor.id}`}>
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">Back to tutor</span>
+                        <span className="sr-only">Regresar al tutor</span>
                     </Link>
                 </Button>
-                <h1 className="text-3xl font-bold">Edit Tutor</h1>
+                <h1 className="text-3xl font-bold">Editar Tutor</h1>
             </div>
 
             <TutorForm

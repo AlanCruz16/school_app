@@ -22,9 +22,9 @@ async function CalendarContent() {
     if (!activeSchoolYear) {
         return (
             <div className="space-y-6">
-                <h1 className="text-3xl font-bold">Payment Calendar</h1>
+                <h1 className="text-3xl font-bold">Calendario de Pagos</h1>
                 <p className="text-muted-foreground">
-                    No active school year found. Please activate a school year to view the payment calendar.
+                    No se encontró un año escolar activo. Por favor, active un año escolar para ver el calendario de pagos.
                 </p>
             </div>
         )
@@ -70,9 +70,9 @@ async function CalendarContent() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-3xl font-bold">Payment Calendar</h1>
+            <h1 className="text-3xl font-bold">Calendario de Pagos</h1>
             <p className="text-muted-foreground">
-                Visual overview of payments across all students
+                Resumen visual de los pagos de todos los estudiantes
             </p>
 
             <PaymentCalendar

@@ -94,7 +94,7 @@ export default function StudentFilters({ grades }: StudentFiltersProps) {
                     <div className="relative">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
-                            placeholder="Search students..."
+                            placeholder="Buscar estudiantes..."
                             className="pl-8"
                             value={query}
                             onChange={(e) => {
@@ -109,10 +109,10 @@ export default function StudentFilters({ grades }: StudentFiltersProps) {
                         onValueChange={setGradeId}
                     >
                         <SelectTrigger>
-                            <SelectValue placeholder="Filter by grade" />
+                            <SelectValue placeholder="Filtrar por grado" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="__all__">All Grades</SelectItem>
+                            <SelectItem value="__all__">Todos los Grados</SelectItem>
                             {grades.map((grade) => (
                                 <SelectItem key={grade.id} value={grade.id}>
                                     {grade.name} ({grade.schoolYear.name})
@@ -126,12 +126,12 @@ export default function StudentFilters({ grades }: StudentFiltersProps) {
                         onValueChange={setActive}
                     >
                         <SelectTrigger>
-                            <SelectValue placeholder="Status" />
+                            <SelectValue placeholder="Estado" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="__all__">All Students</SelectItem>
-                            <SelectItem value="true">Active Only</SelectItem>
-                            <SelectItem value="false">Inactive Only</SelectItem>
+                            <SelectItem value="__all__">Todos los Estudiantes</SelectItem>
+                            <SelectItem value="true">Solo Activos</SelectItem>
+                            <SelectItem value="false">Solo Inactivos</SelectItem>
                         </SelectContent>
                     </Select>
 
@@ -141,7 +141,7 @@ export default function StudentFilters({ grades }: StudentFiltersProps) {
                         className="flex gap-2"
                     >
                         <X className="h-4 w-4" />
-                        Reset Filters
+                        Restablecer Filtros
                     </Button>
                 </div>
             </CardContent>

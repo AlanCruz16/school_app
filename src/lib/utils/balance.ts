@@ -28,7 +28,7 @@ export type PaymentParam = {
     studentId?: string;
     amount: any; // Handle Prisma Decimal, number or string
     paymentDate: Date | string;
-    forMonth: number;
+    forMonth: number | null; // Allow null for backward compatibility or optional payments
     forYear?: number; // Optional year field for backward compatibility
     schoolYearId: string;
     isPartial?: boolean;

@@ -16,15 +16,15 @@ import {
 } from 'lucide-react'
 
 const sidebarLinks = [
-    { name: 'Dashboard', href: '/', icon: Home },
-    { name: 'Students', href: '/students', icon: Users },
-    { name: 'Payments', href: '/payments', icon: CreditCard },
-    { name: 'Calendar', href: '/calendar', icon: CalendarDays },
-    { name: 'Tutors', href: '/tutors', icon: User },
-    { name: 'Grades', href: '/grades', icon: GraduationCap },
+    { name: 'Tablero', href: '/', icon: Home },
+    { name: 'Estudiantes', href: '/students', icon: Users },
+    { name: 'Pagos', href: '/payments', icon: CreditCard },
+    { name: 'Calendario', href: '/calendar', icon: CalendarDays },
+    { name: 'Tutores', href: '/tutors', icon: User },
+    { name: 'Grados', href: '/grades', icon: GraduationCap },
     // Documenting change: Added Reports link to the sidebar.
-    { name: 'Reports', href: '/reports', icon: BarChart },
-    { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'Reportes', href: '/reports', icon: BarChart },
+    { name: 'Configuración', href: '/settings', icon: Settings },
 ]
 
 export default function Sidebar() {

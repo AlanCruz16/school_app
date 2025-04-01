@@ -41,8 +41,8 @@ export default async function NewPaymentPage({
         // Show a meaningful error instead of redirecting
         return (
             <div className="p-8">
-                <h1 className="text-xl font-bold mb-4">Account Setup Required</h1>
-                <p>Your user account isn't properly set up in the system. Please contact an administrator.</p>
+                <h1 className="text-xl font-bold mb-4">Configuración de Cuenta Requerida</h1>
+                <p>Su cuenta de usuario no está configurada correctamente en el sistema. Por favor, contacte a un administrador.</p>
             </div>
         )
     }
@@ -60,19 +60,19 @@ export default async function NewPaymentPage({
                     <Button variant="outline" size="icon" asChild>
                         <Link href="/dashboard">
                             <ArrowLeft className="h-4 w-4" />
-                            <span className="sr-only">Back</span>
+                            <span className="sr-only">Regresar</span>
                         </Link>
                     </Button>
-                    <h1 className="text-3xl font-bold">New Payment</h1>
+                    <h1 className="text-3xl font-bold">Nuevo Pago</h1>
                 </div>
 
                 <div className="bg-destructive/10 text-destructive p-4 rounded-md">
-                    <h2 className="font-semibold">No Active School Year</h2>
+                    <h2 className="font-semibold">No Hay Año Escolar Activo</h2>
                     <p className="mt-1">
-                        There is no active school year. Please activate a school year before recording payments.
+                        No hay un año escolar activo. Por favor, active un año escolar antes de registrar pagos.
                     </p>
                     <Button className="mt-4" asChild variant="outline">
-                        <Link href="/settings/school-years">Manage School Years</Link>
+                        <Link href="/settings/school-years">Gestionar Años Escolares</Link>
                     </Button>
                 </div>
             </div>
@@ -94,10 +94,10 @@ export default async function NewPaymentPage({
                     <Button variant="outline" size="icon" asChild>
                         <Link href="/dashboard">
                             <ArrowLeft className="h-4 w-4" />
-                            <span className="sr-only">Back</span>
+                            <span className="sr-only">Regresar</span>
                         </Link>
                     </Button>
-                    <h1 className="text-3xl font-bold">New Payment</h1>
+                    <h1 className="text-3xl font-bold">Nuevo Pago</h1>
                 </div>
 
                 <StudentSelector />
@@ -140,23 +140,23 @@ export default async function NewPaymentPage({
                     <Button variant="outline" size="icon" asChild>
                         <Link href="/payments/new">
                             <ArrowLeft className="h-4 w-4" />
-                            <span className="sr-only">Back</span>
+                            <span className="sr-only">Regresar</span>
                         </Link>
                     </Button>
-                    <h1 className="text-3xl font-bold">New Payment</h1>
+                    <h1 className="text-3xl font-bold">Nuevo Pago</h1>
                 </div>
 
                 <div className="bg-destructive/10 text-destructive p-4 rounded-md">
-                    <h2 className="font-semibold">Missing Grade Information</h2>
+                    <h2 className="font-semibold">Falta Información de Grado</h2>
                     <p className="mt-1">
-                        This student doesn't have a valid grade assignment. Please update the student record first.
+                        Este estudiante no tiene una asignación de grado válida. Por favor, actualice el registro del estudiante primero.
                     </p>
                     <div className="flex gap-2 mt-4">
                         <Button asChild variant="outline">
-                            <Link href="/payments/new">Choose Another Student</Link>
+                            <Link href="/payments/new">Elegir Otro Estudiante</Link>
                         </Button>
                         <Button asChild>
-                            <Link href={`/students/${student.id}/edit`}>Edit Student</Link>
+                            <Link href={`/students/${student.id}/edit`}>Editar Estudiante</Link>
                         </Button>
                     </div>
                 </div>
@@ -170,10 +170,10 @@ export default async function NewPaymentPage({
                 <Button variant="outline" size="icon" asChild>
                     <Link href={`/students/${student.id}`}>
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">Back to student</span>
+                        <span className="sr-only">Regresar al estudiante</span>
                     </Link>
                 </Button>
-                <h1 className="text-3xl font-bold">New Payment</h1>
+                <h1 className="text-3xl font-bold">Nuevo Pago</h1>
             </div>
 
             <PaymentForm

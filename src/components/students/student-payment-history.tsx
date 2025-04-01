@@ -26,7 +26,7 @@ interface Payment {
     paymentDate: string | Date
     paymentMethod: PrismaPaymentMethod // Use enum type
     paymentType?: PaymentType // Added
-    description?: string // Added
+    description?: string | null | undefined // Allow null or undefined
     forMonth?: number | null // Made nullable
     forYear?: number
     isPartial: boolean
@@ -48,7 +48,7 @@ export default function StudentPaymentHistory({ payments }: StudentPaymentHistor
     if (payments.length === 0) {
         return (
             <div className="text-center py-8 text-muted-foreground">
-                No payment records found for this student.
+                No se encontraron registros de pago para este estudiante.
             </div>
         )
     }
@@ -94,15 +94,15 @@ export default function StudentPaymentHistory({ payments }: StudentPaymentHistor
         ).join(', ');
 
         // Determine the primary concept for the group
-        let concept = 'Payment'; // Default
+        let concept = 'Pago'; // Default
         if (firstPayment.paymentType === PaymentType.TUITION) {
-            concept = isMultiMonth ? `Tuition - Multiple (${group.length})` : `Tuition - ${formatMonth(firstPayment.forMonth!)} ${firstPayment.forYear || ''}`.trim();
+            concept = isMultiMonth ? `Colegiatura - Múltiple (${group.length})` : `Colegiatura - ${formatMonth(firstPayment.forMonth!)} ${firstPayment.forYear || ''}`.trim();
         } else if (firstPayment.paymentType === PaymentType.INSCRIPTION) {
-            concept = `Inscription ${firstPayment.forYear || ''}`.trim();
+            concept = `Inscripción ${firstPayment.forYear || ''}`.trim();
         } else if (firstPayment.paymentType === PaymentType.OPTIONAL) {
-            concept = firstPayment.description || 'Optional Payment';
+            concept = firstPayment.description || 'Pago Opcional';
         } else if (firstPayment.forMonth) { // Fallback for older data
-            concept = isMultiMonth ? `Tuition - Multiple (${group.length})` : `Tuition - ${formatMonth(firstPayment.forMonth!)} ${firstPayment.forYear || ''}`.trim();
+            concept = isMultiMonth ? `Colegiatura - Múltiple (${group.length})` : `Colegiatura - ${formatMonth(firstPayment.forMonth!)} ${firstPayment.forYear || ''}`.trim();
         }
 
 
@@ -127,15 +127,15 @@ export default function StudentPaymentHistory({ payments }: StudentPaymentHistor
                 <Table>
                     <TableHeader className="sticky top-0 bg-card z-10">
                         <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Receipt No.</TableHead>
-                            <TableHead>Concept</TableHead> {/* Changed Header */}
-                            <TableHead>School Year</TableHead>
-                            <TableHead>Method</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                            <TableHead>Processed By</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead>Fecha</TableHead>
+                            <TableHead>Recibo No.</TableHead>
+                            <TableHead>Concepto</TableHead> {/* Changed Header */}
+                            <TableHead>Año Escolar</TableHead>
+                            <TableHead>Método</TableHead>
+                            <TableHead>Estado</TableHead>
+                            <TableHead className="text-right">Monto</TableHead>
+                            <TableHead>Procesado Por</TableHead>
+                            <TableHead className="text-right">Acciones</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -148,7 +148,7 @@ export default function StudentPaymentHistory({ payments }: StudentPaymentHistor
                                     <span>{payment.displayConcept}</span>
                                     {/* Optional: Keep tooltip for multi-month tuition details */}
                                     {payment.isMultiMonth && payment.paymentType === PaymentType.TUITION && (
-                                        <Tooltip content={`Months: ${payment.monthsList}`}>
+                                        <Tooltip content={`Meses: ${payment.monthsList}`}>
                                             <div className="ml-1 cursor-help inline-block">
                                                 <CalendarDays className="h-4 w-4 text-muted-foreground" />
                                             </div>
@@ -162,9 +162,9 @@ export default function StudentPaymentHistory({ payments }: StudentPaymentHistor
                                 </TableCell>
                                 <TableCell>
                                     {payment.isPartial ? (
-                                        <Badge variant="secondary">Partial</Badge>
+                                        <Badge variant="secondary">Parcial</Badge>
                                     ) : (
-                                        <Badge variant="default">Full</Badge>
+                                        <Badge variant="default">Completo</Badge>
                                     )}
                                 </TableCell>
                                 <TableCell className="text-right font-medium">

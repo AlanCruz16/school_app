@@ -42,9 +42,9 @@ const paymentMethodOptions = {
 
 // Define options for Payment Type dropdown
 const paymentTypeOptions = {
-    [PaymentType.TUITION]: { label: 'Tuition Fee', icon: DollarSign },
-    [PaymentType.INSCRIPTION]: { label: 'Inscription Fee', icon: BookOpen },
-    [PaymentType.OPTIONAL]: { label: 'Optional Payment', icon: Gift },
+    [PaymentType.TUITION]: { label: 'Colegiatura', icon: DollarSign },
+    [PaymentType.INSCRIPTION]: { label: 'Inscripción', icon: BookOpen },
+    [PaymentType.OPTIONAL]: { label: 'Pago Opcional', icon: Gift },
 };
 
 
@@ -192,7 +192,7 @@ export default function PaymentForm({
                 try {
                     const response = await fetch(`/api/payments?studentId=${student.id}&schoolYearId=${activeSchoolYear.id}`);
                     if (!response.ok) {
-                        throw new Error('Failed to fetch payment history');
+                        throw new Error('Error al cargar el historial de pagos');
                     }
                     const data = await response.json();
                     if (isMounted) {
@@ -202,8 +202,8 @@ export default function PaymentForm({
                     console.error('Error fetching payment history:', error);
                     if (isMounted) {
                         toast({
-                            title: 'Warning',
-                            description: 'Could not load payment history. Month status might be inaccurate.',
+                            title: 'Advertencia',
+                            description: 'No se pudo cargar el historial de pagos. El estado de los meses podría ser inexacto.',
                             variant: 'destructive',
                         });
                         // Keep payments as empty array on error
@@ -276,7 +276,7 @@ export default function PaymentForm({
             console.log('Assigned status:', status);
 
             const label = `${formatMonth(monthYear.month)} ${monthYear.year}${status !== 'unpaid' ?
-                ` (${status === 'paid' ? 'Fully Paid' : `Partial: ${formatCurrency(totalPaid)}`})` : ''}`;
+                ` (${status === 'paid' ? 'Pagado Completo' : `Parcial: ${formatCurrency(totalPaid)}`})` : ''}`;
 
             return {
                 month: monthYear.month,
@@ -389,30 +389,30 @@ export default function PaymentForm({
 
         // --- Universal Validations ---
         if (!amount) {
-            toast({ title: 'Validation Error', description: 'Please enter a payment amount.', variant: 'destructive' })
+            toast({ title: 'Error de Validación', description: 'Por favor, ingrese un monto de pago.', variant: 'destructive' })
             return
         }
         const paymentAmount = parseFloat(amount)
         if (isNaN(paymentAmount) || paymentAmount <= 0) {
-            toast({ title: 'Validation Error', description: 'Please enter a valid payment amount greater than zero.', variant: 'destructive' })
+            toast({ title: 'Error de Validación', description: 'Por favor, ingrese un monto de pago válido mayor que cero.', variant: 'destructive' })
             return
         }
         if (paymentType === PaymentType.OPTIONAL && !description) {
-            toast({ title: 'Validation Error', description: 'Please enter a description for the optional payment.', variant: 'destructive' })
+            toast({ title: 'Error de Validación', description: 'Por favor, ingrese una descripción para el pago opcional.', variant: 'destructive' })
             return
         }
 
         // --- TUITION Specific Validations ---
         if (paymentType === PaymentType.TUITION) {
             if (paymentMode === 'specific' && selectedMonths.length === 0) {
-                toast({ title: 'Validation Error', description: 'Please select at least one month for tuition payment.', variant: 'destructive' })
+                toast({ title: 'Error de Validación', description: 'Por favor, seleccione al menos un mes para el pago de colegiatura.', variant: 'destructive' })
                 return
             }
             if (paymentMode === 'specific' && !isPartial) {
                 const expectedTotal = selectedMonths.length * monthlyFee;
                 if (paymentAmount !== expectedTotal) {
                     setIsPartial(true)
-                    toast({ title: 'Notice', description: `Amount ${formatCurrency(paymentAmount)} does not match expected total ${formatCurrency(expectedTotal)}. Marked as partial payment.`, variant: 'default' })
+                    toast({ title: 'Aviso', description: `El monto ${formatCurrency(paymentAmount)} no coincide con el total esperado ${formatCurrency(expectedTotal)}. Marcado como pago parcial.`, variant: 'default' })
                 }
             }
         }
@@ -466,17 +466,17 @@ export default function PaymentForm({
 
             if (!response.ok) {
                 const error = await response.json()
-                throw new Error(error.error || 'Something went wrong')
+                throw new Error(error.error || 'Algo salió mal')
             }
 
             const result = await response.json()
 
-            toast({ title: 'Payment Recorded', description: `${paymentTypeOptions[paymentType].label} of ${formatCurrency(paymentAmount)} for ${student.name} recorded.` })
+            toast({ title: 'Pago Registrado', description: `${paymentTypeOptions[paymentType].label} de ${formatCurrency(paymentAmount)} para ${student.name} registrado.` })
 
             router.push(`/payments/${result.payment.id}/receipt`)
             router.refresh()
         } catch (error) {
-            toast({ title: 'Error', description: error instanceof Error ? error.message : 'An error occurred', variant: 'destructive' })
+            toast({ title: 'Error', description: error instanceof Error ? error.message : 'Ocurrió un error', variant: 'destructive' })
         } finally {
             setIsSubmitting(false)
         }
@@ -486,13 +486,13 @@ export default function PaymentForm({
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Missing Grade Information</CardTitle>
-                    <CardDescription>This student doesn't have a valid grade assignment.</CardDescription>
+                    <CardTitle>Falta Información de Grado</CardTitle>
+                    <CardDescription>Este estudiante no tiene una asignación de grado válida.</CardDescription>
                 </CardHeader>
-                <CardContent><p>Before recording payments, this student needs to be assigned to a grade with a valid tuition amount.</p></CardContent>
+                <CardContent><p>Antes de registrar pagos, este estudiante necesita ser asignado a un grado con un monto de colegiatura válido.</p></CardContent>
                 <CardFooter className="flex justify-between">
-                    <Button type="button" variant="outline" onClick={() => router.back()}>Go Back</Button>
-                    <Button asChild><Link href={`/students/${student.id}/edit`}>Edit Student</Link></Button>
+                    <Button type="button" variant="outline" onClick={() => router.back()}>Regresar</Button>
+                    <Button asChild><Link href={`/students/${student.id}/edit`}>Editar Estudiante</Link></Button>
                 </CardFooter>
             </Card>
         )
@@ -504,23 +504,23 @@ export default function PaymentForm({
         <form onSubmit={handleSubmit}>
             <Card>
                 <CardHeader>
-                    <CardTitle>New Payment</CardTitle>
-                    <CardDescription>Record a payment for {student.name}</CardDescription>
+                    <CardTitle>Nuevo Pago</CardTitle>
+                    <CardDescription>Registrar un pago para {student.name}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     {/* Student Information */}
                     <div className="rounded-md bg-muted p-4">
                         <div className="grid gap-2">
-                            <div className="text-sm font-medium">Student</div>
+                            <div className="text-sm font-medium">Estudiante</div>
                             <div className="text-lg font-bold">{student.name}</div>
                         </div>
                         <div className="grid grid-cols-2 gap-4 mt-2">
                             <div>
-                                <div className="text-sm font-medium">Grade</div>
-                                <div>{student.grade?.name} ({student.grade?.schoolYear?.name || "No school year"})</div>
+                                <div className="text-sm font-medium">Grado</div>
+                                <div>{student.grade?.name} ({student.grade?.schoolYear?.name || "Sin año escolar"})</div>
                             </div>
                             <div>
-                                <div className="text-sm font-medium">Monthly Fee</div>
+                                <div className="text-sm font-medium">Cuota Mensual</div>
                                 <div className="font-bold">{formatCurrency(monthlyFee)}</div>
                             </div>
                         </div>
@@ -528,7 +528,7 @@ export default function PaymentForm({
 
                     {/* Payment Type Selection */}
                     <div className="space-y-3">
-                        <Label htmlFor="paymentType">Payment Type</Label>
+                        <Label htmlFor="paymentType">Tipo de Pago</Label>
                         <Select
                             value={paymentType}
                             onValueChange={(value) => {
@@ -547,7 +547,7 @@ export default function PaymentForm({
                                 setDescription('');
                             }}
                         >
-                            <SelectTrigger id="paymentType"><SelectValue placeholder="Select payment type" /></SelectTrigger>
+                            <SelectTrigger id="paymentType"><SelectValue placeholder="Seleccionar tipo de pago" /></SelectTrigger>
                             <SelectContent>
                                 {Object.entries(availablePaymentTypes).map(([key, { label, icon: Icon }]) => ( // Use filtered types
                                     <SelectItem key={key} value={key}>
@@ -564,16 +564,16 @@ export default function PaymentForm({
                     {/* Optional Payment Description */}
                     {paymentType === PaymentType.OPTIONAL && (
                         <div className="space-y-3">
-                            <Label htmlFor="description">Description *</Label>
-                            <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g., Uniform purchase, School trip fee" required />
+                            <Label htmlFor="description">Descripción *</Label>
+                            <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ej., Compra de uniforme, Cuota de viaje escolar" required />
                         </div>
                     )}
 
                     {/* Payment Method */}
                     <div className="space-y-3">
-                        <Label htmlFor="paymentMethod">Payment Method</Label>
+                        <Label htmlFor="paymentMethod">Método de Pago</Label>
                         <Select value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as PrismaPaymentMethod)}>
-                            <SelectTrigger id="paymentMethod"><SelectValue placeholder="Select payment method" /></SelectTrigger>
+                            <SelectTrigger id="paymentMethod"><SelectValue placeholder="Seleccionar método de pago" /></SelectTrigger>
                             <SelectContent>
                                 {Object.entries(paymentMethodOptions).map(([key, value]) => (
                                     <SelectItem key={key} value={key}>{value}</SelectItem>
@@ -585,18 +585,18 @@ export default function PaymentForm({
                     {/* Payment Mode Selection (Only for TUITION) */}
                     {isTuitionMode && (
                         <div className="space-y-3">
-                            <Label>Payment Mode (Tuition)</Label>
+                            <Label>Modo de Pago (Colegiatura)</Label>
                             <Tabs value={paymentMode} onValueChange={(value) => setPaymentMode(value as 'specific' | 'bulk')} className="w-full">
                                 <TabsList className="grid w-full grid-cols-2">
-                                    <TabsTrigger value="specific" className="flex items-center gap-2"><Calendar className="h-4 w-4" /><span>Specific Months</span></TabsTrigger>
-                                    <TabsTrigger value="bulk" className="flex items-center gap-2"><DollarSign className="h-4 w-4" /><span>Bulk Payment</span></TabsTrigger>
+                                    <TabsTrigger value="specific" className="flex items-center gap-2"><Calendar className="h-4 w-4" /><span>Meses Específicos</span></TabsTrigger>
+                                    <TabsTrigger value="bulk" className="flex items-center gap-2"><DollarSign className="h-4 w-4" /><span>Pago Masivo</span></TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="specific" className="mt-4">
                                     {/* Month Selection */}
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between">
-                                            <Label>Select Months to Pay *</Label>
-                                            <div className="text-xs text-muted-foreground">{selectedMonths.length} month{selectedMonths.length !== 1 ? 's' : ''} selected</div>
+                                            <Label>Seleccionar Meses a Pagar *</Label>
+                                            <div className="text-xs text-muted-foreground">{selectedMonths.length} mes{selectedMonths.length !== 1 ? 'es' : ''} seleccionado{selectedMonths.length !== 1 ? 's' : ''}</div>
                                         </div>
                                         {isLoading ? (
                                             <div className="h-[200px] w-full rounded-md border bg-muted animate-pulse" />
@@ -608,20 +608,20 @@ export default function PaymentForm({
                                                             <Checkbox id={`month-${monthData.key}`} checked={selectedMonths.includes(monthData.key)} onCheckedChange={() => toggleMonth(monthData.key)} />
                                                             <Label htmlFor={`month-${monthData.key}`} className="flex items-center cursor-pointer">
                                                                 <span className="flex-1">{formatMonth(monthData.month)} {monthData.year}</span>
-                                                                {monthData.status === 'partial' && (<Badge variant="secondary" className="ml-2">Partial</Badge>)}
+                                                                {monthData.status === 'partial' && (<Badge variant="secondary" className="ml-2">Parcial</Badge>)}
                                                             </Label>
                                                         </div>
                                                     ))}
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="rounded-md border p-3 bg-green-50 text-green-800 flex items-center"><Check className="mr-2 h-4 w-4" /><span>All months for this school year have been fully paid.</span></div>
+                                            <div className="rounded-md border p-3 bg-green-50 text-green-800 flex items-center"><Check className="mr-2 h-4 w-4" /><span>Todos los meses para este año escolar han sido pagados completamente.</span></div>
                                         )}
                                     </div>
                                     {/* Selected Month Summary */}
                                     {selectedMonths.length > 0 && (
                                         <div className="rounded-md border p-4 bg-secondary/20 mt-4">
-                                            <h4 className="font-medium text-sm mb-2 flex items-center"><Calendar className="h-4 w-4 mr-2" />Payment Summary</h4>
+                                            <h4 className="font-medium text-sm mb-2 flex items-center"><Calendar className="h-4 w-4 mr-2" />Resumen de Pago</h4>
                                             <div className="space-y-1 text-sm">
                                                 {selectedMonthsData.map(month => (<div key={month.key} className="flex justify-between"><span>{formatMonth(month.month)} {month.year}</span><span>{formatCurrency(month.fee)}</span></div>))}
                                                 <div className="flex justify-between font-bold pt-2 border-t mt-2"><span>Total</span><span>{formatCurrency(selectedMonths.length * monthlyFee)}</span></div>
@@ -633,15 +633,15 @@ export default function PaymentForm({
                                     {/* Bulk Payment UI */}
                                     <div className="space-y-4">
                                         <div className="rounded-md border p-4">
-                                            <h4 className="font-medium mb-2 flex items-center"><DollarSign className="h-4 w-4 mr-2" />Bulk Payment</h4>
-                                            <p className="text-sm text-muted-foreground mb-3">Make a payment without selecting specific months. The system will automatically distribute the payment to oldest unpaid months first.</p>
+                                            <h4 className="font-medium mb-2 flex items-center"><DollarSign className="h-4 w-4 mr-2" />Pago Masivo</h4>
+                                            <p className="text-sm text-muted-foreground mb-3">Realice un pago sin seleccionar meses específicos. El sistema distribuirá automáticamente el pago a los meses impagos más antiguos primero.</p>
                                             {unpaidMonthsForDistribution.length === 0 ? (
-                                                <div className="rounded-md border p-3 bg-green-50 text-green-800 flex items-center"><Check className="mr-2 h-4 w-4" /><span>All months for this school year have been fully paid.</span></div>
+                                                <div className="rounded-md border p-3 bg-green-50 text-green-800 flex items-center"><Check className="mr-2 h-4 w-4" /><span>Todos los meses para este año escolar han sido pagados completamente.</span></div>
                                             ) : (
                                                 <>
-                                                    <div className="flex justify-between items-center text-sm font-medium py-2 border-b"><span>Total outstanding balance:</span><span className="text-destructive font-bold">{formatCurrency(totalUnpaidAmount)}</span></div>
+                                                    <div className="flex justify-between items-center text-sm font-medium py-2 border-b"><span>Saldo pendiente total:</span><span className="text-destructive font-bold">{formatCurrency(totalUnpaidAmount)}</span></div>
                                                     <div className="mt-3">
-                                                        <Label htmlFor="bulkAmount">Payment Amount *</Label>
+                                                        <Label htmlFor="bulkAmount">Monto del Pago *</Label>
                                                         <div className="relative mt-1">
                                                             <span className="absolute left-3 top-2.5">$</span>
                                                             <Input id="bulkAmount" type="number" step="0.01" min="0.01" max={totalUnpaidAmount} value={amount} onChange={(e) => setAmount(e.target.value)} className="pl-8" />
@@ -651,8 +651,8 @@ export default function PaymentForm({
                                                     {parseFloat(amount) > 0 && (
                                                         <div className="mt-4">
                                                             <div className="flex justify-between items-center cursor-pointer" onClick={(e) => { e.preventDefault(); setBulkPreviewExpanded(!bulkPreviewExpanded); }}>
-                                                                <h5 className="font-medium text-sm">Payment Distribution Preview</h5>
-                                                                <Button type="button" variant="ghost" size="sm" className="h-6 px-2">{bulkPreviewExpanded ? 'Hide' : 'Show'} Details</Button>
+                                                                <h5 className="font-medium text-sm">Vista Previa de Distribución de Pago</h5>
+                                                                <Button type="button" variant="ghost" size="sm" className="h-6 px-2">{bulkPreviewExpanded ? 'Ocultar' : 'Mostrar'} Detalles</Button>
                                                             </div>
                                                             {bulkPreviewExpanded && (
                                                                 <div className="mt-2 space-y-1 text-sm max-h-[200px] overflow-y-auto border rounded-md p-2">
@@ -663,12 +663,12 @@ export default function PaymentForm({
                                                                                     <span>{formatMonth(allocation.monthYear.month)} {allocation.monthYear.year}</span>
                                                                                     <div className="flex flex-col items-end">
                                                                                         <span>{formatCurrency(allocation.amount)}</span>
-                                                                                        {allocation.isPartial && (<span className="text-xs text-yellow-600">Partial</span>)}
+                                                                                        {allocation.isPartial && (<span className="text-xs text-yellow-600">Parcial</span>)}
                                                                                     </div>
                                                                                 </div>
                                                                             ))}
                                                                         </>
-                                                                    ) : (<div className="text-center py-2 text-muted-foreground">Enter a payment amount to see distribution</div>)}
+                                                                    ) : (<div className="text-center py-2 text-muted-foreground">Ingrese un monto de pago para ver la distribución</div>)}
                                                                 </div>
                                                             )}
                                                         </div>
@@ -677,7 +677,7 @@ export default function PaymentForm({
                                             )}
                                         </div>
                                         {parseFloat(amount) > 0 && parseFloat(amount) < totalUnpaidAmount && (
-                                            <div className="rounded-md border p-3 bg-yellow-50 text-yellow-700 flex items-center text-sm"><AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" /><span>This amount will partially pay some months. The oldest unpaid months will be prioritized.</span></div>
+                                            <div className="rounded-md border p-3 bg-yellow-50 text-yellow-700 flex items-center text-sm"><AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" /><span>Este monto pagará parcialmente algunos meses. Se priorizarán los meses impagos más antiguos.</span></div>
                                         )}
                                     </div>
                                 </TabsContent>
@@ -689,13 +689,13 @@ export default function PaymentForm({
                     {isTuitionMode && paymentMode === 'specific' && (
                         <div className="flex items-center space-x-2">
                             <Switch id="partial" checked={isPartial} onCheckedChange={setIsPartial} />
-                            <Label htmlFor="partial">Partial payment (Tuition)</Label>
+                            <Label htmlFor="partial">Pago parcial (Colegiatura)</Label>
                         </div>
                     )}
 
                     {/* Payment Amount */}
                     <div className="space-y-3">
-                        <Label htmlFor="amount">Amount *</Label>
+                        <Label htmlFor="amount">Monto *</Label>
                         <div className="relative">
                             <span className="absolute left-3 top-2.5">$</span>
                             <Input
@@ -719,10 +719,10 @@ export default function PaymentForm({
                         {isTuitionMode && (
                             <div className="text-sm text-muted-foreground">
                                 {paymentMode === 'bulk'
-                                    ? `Maximum payment: ${formatCurrency(totalUnpaidAmount)}`
+                                    ? `Pago máximo: ${formatCurrency(totalUnpaidAmount)}`
                                     : (isPartial
-                                        ? "Enter the partial amount being paid for the selected month(s)."
-                                        : `Full payment amount for selected month(s): ${formatCurrency(selectedMonths.length * monthlyFee)}`)
+                                        ? "Ingrese el monto parcial que se está pagando por el/los mes(es) seleccionado(s)."
+                                        : `Monto de pago completo para el/los mes(es) seleccionado(s): ${formatCurrency(selectedMonths.length * monthlyFee)}`)
                                 }
                             </div>
                         )}
@@ -730,35 +730,35 @@ export default function PaymentForm({
 
                     {/* Notes */}
                     <div className="space-y-3">
-                        <Label htmlFor="notes">Notes (optional)</Label>
-                        <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add any additional information about this payment" />
+                        <Label htmlFor="notes">Notas (opcional)</Label>
+                        <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Agregue cualquier información adicional sobre este pago" />
                     </div>
 
                     {/* Receipt Preview */}
                     <div className="rounded-md border p-4">
-                        <h3 className="font-semibold">Receipt Preview</h3>
+                        <h3 className="font-semibold">Vista Previa del Recibo</h3>
                         <div className="mt-2 space-y-1 text-sm">
-                            <div className="grid grid-cols-2"><span className="text-muted-foreground">Student:</span><span>{student.name}</span></div>
-                            <div className="grid grid-cols-2"><span className="text-muted-foreground">Date:</span><span>{new Date().toLocaleDateString()}</span></div>
-                            <div className="grid grid-cols-2"><span className="text-muted-foreground">Amount:</span><span>{formatCurrency(parseFloat(amount) || 0)}</span></div>
+                            <div className="grid grid-cols-2"><span className="text-muted-foreground">Estudiante:</span><span>{student.name}</span></div>
+                            <div className="grid grid-cols-2"><span className="text-muted-foreground">Fecha:</span><span>{new Date().toLocaleDateString()}</span></div>
+                            <div className="grid grid-cols-2"><span className="text-muted-foreground">Monto:</span><span>{formatCurrency(parseFloat(amount) || 0)}</span></div>
                             <div className="grid grid-cols-2">
-                                <span className="text-muted-foreground">Concept:</span>
+                                <span className="text-muted-foreground">Concepto:</span>
                                 <span>
                                     {paymentType === PaymentType.TUITION
                                         ? (selectedMonthsData.length
-                                            ? (selectedMonthsData.length > 1 ? `Tuition - Multiple months (${selectedMonthsData.length})` : `Tuition - ${formatMonthYear(selectedMonthsData[0])}`)
-                                            : (paymentMode === 'bulk' ? 'Tuition - Bulk Payment' : 'Tuition'))
-                                        : (paymentType === PaymentType.INSCRIPTION ? 'Inscription Fee' : (description || 'Optional Payment'))
+                                            ? (selectedMonthsData.length > 1 ? `Colegiatura - Varios meses (${selectedMonthsData.length})` : `Colegiatura - ${formatMonthYear(selectedMonthsData[0])}`)
+                                            : (paymentMode === 'bulk' ? 'Colegiatura - Pago Masivo' : 'Colegiatura'))
+                                        : (paymentType === PaymentType.INSCRIPTION ? 'Cuota de Inscripción' : (description || 'Pago Opcional'))
                                     }
                                 </span>
                             </div>
-                            <div className="grid grid-cols-2"><span className="text-muted-foreground">Payment Method:</span><span>{paymentMethodDisplayMap[paymentMethod] || paymentMethod}</span></div>
-                            <div className="grid grid-cols-2"><span className="text-muted-foreground">Processed by:</span><span>{clerkName}</span></div>
+                            <div className="grid grid-cols-2"><span className="text-muted-foreground">Método de Pago:</span><span>{paymentMethodDisplayMap[paymentMethod] || paymentMethod}</span></div>
+                            <div className="grid grid-cols-2"><span className="text-muted-foreground">Procesado por:</span><span>{clerkName}</span></div>
                         </div>
                     </div>
                 </CardContent>
                 <CardFooter className="flex justify-between">
-                    <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
+                    <Button type="button" variant="outline" onClick={() => router.back()}>Cancelar</Button>
                     <Button
                         type="submit"
                         disabled={
@@ -769,7 +769,7 @@ export default function PaymentForm({
                             (paymentType === PaymentType.OPTIONAL && !description)
                         }
                     >
-                        {isSubmitting ? 'Processing...' : `Record ${paymentTypeOptions[paymentType].label}`}
+                        {isSubmitting ? 'Procesando...' : `Registrar ${paymentTypeOptions[paymentType].label}`}
                     </Button>
                 </CardFooter>
             </Card>

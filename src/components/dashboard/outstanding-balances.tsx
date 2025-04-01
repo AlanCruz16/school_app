@@ -132,19 +132,19 @@ export default function OutstandingBalances({
             });
 
             if (!response.ok) {
-                throw new Error('Failed to sync balance');
+                throw new Error('Error al sincronizar el saldo');
             }
 
             toast({
-                title: 'Balance Updated',
-                description: 'Student balance has been updated to match the expected amount.',
+                title: 'Saldo Actualizado',
+                description: 'El saldo del estudiante ha sido actualizado para coincidir con el monto esperado.',
             });
 
             // In a real app, we might want to refresh the data here
         } catch (error) {
             toast({
                 title: 'Error',
-                description: 'Failed to update student balance.',
+                description: 'Error al actualizar el saldo del estudiante.',
                 variant: 'destructive',
             });
         } finally {
@@ -155,7 +155,7 @@ export default function OutstandingBalances({
     if (studentsWithBalance.length === 0) {
         return (
             <div className="text-center py-6 text-muted-foreground">
-                No students with outstanding balances.
+                No hay estudiantes con saldos pendientes.
             </div>
         );
     }
@@ -165,7 +165,7 @@ export default function OutstandingBalances({
             <div className="flex items-center justify-between">
                 <div className="text-sm text-muted-foreground">
                     {studentsWithBalance.length}
-                    {studentsWithBalance.length === 1 ? ' student' : ' students'} with outstanding balance
+                    {studentsWithBalance.length === 1 ? ' estudiante' : ' estudiantes'} con saldo pendiente
                 </div>
                 <div className="font-medium">
                     Total: {formatCurrency(totalOutstanding)}
@@ -176,11 +176,11 @@ export default function OutstandingBalances({
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Student</TableHead>
-                            <TableHead>Grade</TableHead>
+                            <TableHead>Estudiante</TableHead>
+                            <TableHead>Grado</TableHead>
                             <TableHead>Tutor</TableHead>
-                            <TableHead className="text-right">Balance</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead className="text-right">Saldo</TableHead>
+                            <TableHead className="text-right">Acciones</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -195,12 +195,12 @@ export default function OutstandingBalances({
                                             {student.name}
                                         </Link>
                                         {!student.active && (
-                                            <Badge variant="secondary" className="ml-2">Inactive</Badge>
+                                            <Badge variant="secondary" className="ml-2">Inactivo</Badge>
                                         )}
                                     </div>
                                 </TableCell>
-                                <TableCell>{student.grade?.name || 'Not assigned'}</TableCell>
-                                <TableCell>{student.tutor?.name || 'Not assigned'}</TableCell>
+                                <TableCell>{student.grade?.name || 'No asignado'}</TableCell>
+                                <TableCell>{student.tutor?.name || 'No asignado'}</TableCell>
                                 <TableCell className="text-right">
                                     <div className="font-bold text-destructive">
                                         {formatCurrency(student.expectedBalance)}
@@ -208,7 +208,7 @@ export default function OutstandingBalances({
 
                                     {student.needsSync && (
                                         <div className="text-xs text-yellow-600 flex items-center justify-end mt-1">
-                                            <span>Current: {formatCurrency(parseFloat(student.balance.toString()))}</span>
+                                            <span>Actual: {formatCurrency(parseFloat(student.balance.toString()))}</span>
 
                                             <Button
                                                 variant="ghost"
@@ -218,7 +218,7 @@ export default function OutstandingBalances({
                                                 onClick={() => syncStudentBalance(student.id, student.expectedBalance)}
                                             >
                                                 <RefreshCw className="h-3 w-3" />
-                                                <span className="sr-only">Sync balance</span>
+                                                <span className="sr-only">Sincronizar saldo</span>
                                             </Button>
                                         </div>
                                     )}
@@ -232,7 +232,7 @@ export default function OutstandingBalances({
                                         >
                                             <Link href={`/students/${student.id}`}>
                                                 <ArrowUpRight className="h-4 w-4 mr-1" />
-                                                View
+                                                Ver
                                             </Link>
                                         </Button>
                                         <Button
@@ -241,7 +241,7 @@ export default function OutstandingBalances({
                                         >
                                             <Link href={`/payments/new?studentId=${student.id}`}>
                                                 <CreditCard className="h-4 w-4 mr-1" />
-                                                Pay
+                                                Pagar
                                             </Link>
                                         </Button>
                                     </div>
@@ -256,7 +256,7 @@ export default function OutstandingBalances({
                 <div className="flex justify-center">
                     <Button variant="outline" asChild>
                         <Link href="/reports/outstanding-balances">
-                            View All Outstanding Balances
+                            Ver Todos los Saldos Pendientes
                         </Link>
                     </Button>
                 </div>

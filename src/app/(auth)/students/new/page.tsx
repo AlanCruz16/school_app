@@ -43,10 +43,10 @@ export default async function NewStudentPage() {
                 <Button variant="outline" size="icon" asChild>
                     <Link href="/students">
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">Back to students</span>
+                        <span className="sr-only">Regresar a estudiantes</span>
                     </Link>
                 </Button>
-                <h1 className="text-3xl font-bold">Add New Student</h1>
+                <h1 className="text-3xl font-bold">Agregar Nuevo Estudiante</h1>
             </div>
 
             <StudentForm

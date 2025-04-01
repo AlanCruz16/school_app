@@ -70,16 +70,16 @@ export default function PaymentHistory({ payments }: PaymentHistoryProps) {
                 <Table>
                     <TableHeader className="sticky top-0 bg-card z-10">
                         <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Receipt No.</TableHead>
-                            <TableHead>Student</TableHead>
-                            <TableHead>Concept</TableHead> {/* Changed from Month */}
-                            <TableHead>School Year</TableHead>
-                            <TableHead>Method</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                            <TableHead>Processed By</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead>Fecha</TableHead>
+                            <TableHead>Recibo No.</TableHead>
+                            <TableHead>Estudiante</TableHead>
+                            <TableHead>Concepto</TableHead> {/* Changed from Month */}
+                            <TableHead>Año Escolar</TableHead>
+                            <TableHead>Método</TableHead>
+                            <TableHead>Estado</TableHead>
+                            <TableHead className="text-right">Monto</TableHead>
+                            <TableHead>Procesado Por</TableHead>
+                            <TableHead className="text-right">Acciones</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -98,14 +98,14 @@ export default function PaymentHistory({ payments }: PaymentHistoryProps) {
                                 <TableCell>
                                     {/* Display Concept based on type */}
                                     {payment.paymentType === PaymentType.TUITION && payment.forMonth
-                                        ? `Tuition - ${formatMonth(payment.forMonth)} ${payment.forYear || ''}`.trim()
+                                        ? `Colegiatura - ${formatMonth(payment.forMonth)} ${payment.forYear || ''}`.trim()
                                         : payment.paymentType === PaymentType.INSCRIPTION
-                                            ? `Inscription ${payment.forYear || ''}`.trim()
+                                            ? `Inscripción ${payment.forYear || ''}`.trim()
                                             : payment.paymentType === PaymentType.OPTIONAL
-                                                ? payment.description || 'Optional Payment'
+                                                ? payment.description || 'Pago Opcional'
                                                 : payment.forMonth // Fallback for older data
-                                                    ? `Tuition - ${formatMonth(payment.forMonth)} ${payment.forYear || ''}`.trim()
-                                                    : 'Payment'
+                                                    ? `Colegiatura - ${formatMonth(payment.forMonth)} ${payment.forYear || ''}`.trim()
+                                                    : 'Pago'
                                     }
                                 </TableCell>
                                 <TableCell>{payment.schoolYear.name}</TableCell>
@@ -115,9 +115,9 @@ export default function PaymentHistory({ payments }: PaymentHistoryProps) {
                                 </TableCell>
                                 <TableCell>
                                     {payment.isPartial ? (
-                                        <Badge variant="secondary">Partial</Badge>
+                                        <Badge variant="secondary">Parcial</Badge>
                                     ) : (
-                                        <Badge variant="default">Full</Badge>
+                                        <Badge variant="default">Completo</Badge>
                                     )}
                                 </TableCell>
                                 <TableCell className="text-right font-medium">
@@ -129,19 +129,19 @@ export default function PaymentHistory({ payments }: PaymentHistoryProps) {
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" size="icon">
                                                 <MoreHorizontal className="h-4 w-4" />
-                                                <span className="sr-only">Actions</span>
+                                                <span className="sr-only">Acciones</span>
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
                                             <DropdownMenuItem asChild>
                                                 <Link href={`/payments/${payment.id}/receipt`}>
                                                     <FileText className="mr-2 h-4 w-4" />
-                                                    View Receipt
+                                                    Ver Recibo
                                                 </Link>
                                             </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => handlePrintReceipt(payment.id)}>
                                                 <Printer className="mr-2 h-4 w-4" />
-                                                Print Receipt
+                                                Imprimir Recibo
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>

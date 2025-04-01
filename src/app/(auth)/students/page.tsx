@@ -81,15 +81,15 @@ async function StudentsContent({
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold">Students</h1>
+                    <h1 className="text-3xl font-bold">Estudiantes</h1>
                     <p className="text-muted-foreground">
-                        Manage student records and view payment status
+                        Gestionar registros de estudiantes y ver estado de pagos
                     </p>
                 </div>
                 <Button asChild>
                     <Link href="/students/new">
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Student
+                        Agregar Estudiante
                     </Link>
                 </Button>
             </div>

@@ -36,7 +36,7 @@ interface Payment {
     amount: any // Changed to handle Prisma Decimal type
     paymentDate: string | Date
     paymentMethod: string
-    forMonth: number
+    forMonth: number | null // Allow null for backward compatibility or optional payments
     forYear?: number // Optional: the specific year for the payment
     isPartial: boolean
     schoolYearId: string
@@ -84,7 +84,7 @@ export default function StudentPaymentCalendar({
     if (!activeSchoolYear) {
         return (
             <div className="text-center py-8 text-muted-foreground">
-                No active school year configured. Please set up a school year first.
+                No hay año escolar activo configurado. Por favor, configure un año escolar primero.
             </div>
         )
     }
@@ -191,10 +191,10 @@ export default function StudentPaymentCalendar({
                                 "text-sm font-medium mt-1",
                                 statusTextColors[status as keyof typeof statusTextColors]
                             )}>
-                                {status === 'paid' && 'Paid'}
-                                {status === 'partial' && 'Partial'}
-                                {status === 'unpaid' && (shouldBePaid ? 'Overdue' : 'Unpaid')}
-                                {status === 'future' && 'Upcoming'}
+                                {status === 'paid' && 'Pagado'}
+                                {status === 'partial' && 'Parcial'}
+                                {status === 'unpaid' && (shouldBePaid ? 'Vencido' : 'No Pagado')}
+                                {status === 'future' && 'Próximo'}
                             </div>
                             <div className="mt-2 text-sm">
                                 {formatCurrency(totalPaid)} / {formatCurrency(monthlyFee)}
@@ -202,7 +202,7 @@ export default function StudentPaymentCalendar({
 
                             {shouldBePaid && status === 'unpaid' && (
                                 <div className="mt-2 text-xs text-destructive font-semibold">
-                                    Payment due
+                                    Pago pendiente
                                 </div>
                             )}
                         </div>
@@ -214,7 +214,7 @@ export default function StudentPaymentCalendar({
                 <div className="mt-6">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold">
-                            {formatMonthYear(selectedMonthYear)} Details
+                            Detalles de {formatMonthYear(selectedMonthYear)}
                         </h3>
 
                         {/* Find the payment info for this month */}
@@ -226,7 +226,7 @@ export default function StudentPaymentCalendar({
                                         href={`/payments/new?studentId=${studentId}&month=${selectedMonthYear.month}&year=${selectedMonthYear.year}`}
                                     >
                                         <CreditCard className="mr-2 h-4 w-4" />
-                                        Record Payment
+                                        Registrar Pago
                                     </Link>
                                 </Button>
                             )
@@ -242,11 +242,11 @@ export default function StudentPaymentCalendar({
                                 <>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <div className="text-sm text-muted-foreground">Monthly Fee</div>
+                                            <div className="text-sm text-muted-foreground">Cuota Mensual</div>
                                             <div className="text-lg font-semibold">{formatCurrency(monthlyFee)}</div>
                                         </div>
                                         <div>
-                                            <div className="text-sm text-muted-foreground">Amount Paid</div>
+                                            <div className="text-sm text-muted-foreground">Monto Pagado</div>
                                             <div className="text-lg font-semibold">{formatCurrency(info.totalPaid)}</div>
                                         </div>
                                     </div>
@@ -254,7 +254,7 @@ export default function StudentPaymentCalendar({
                                     {/* Enhanced overdue payment highlight */}
                                     {info.shouldBePaid && info.status === 'unpaid' && (
                                         <div className="rounded-md bg-destructive/10 p-3 border border-destructive/20">
-                                            <div className="text-sm font-medium text-destructive">Overdue Payment</div>
+                                            <div className="text-sm font-medium text-destructive">Pago Vencido</div>
                                             <div className="text-lg font-bold text-destructive">
                                                 {formatCurrency(info.remainingBalance)}
                                             </div>
@@ -265,7 +265,7 @@ export default function StudentPaymentCalendar({
                                     {info.remainingBalance > 0 &&
                                         !(info.shouldBePaid && info.status === 'unpaid') && (
                                             <div className="rounded-md bg-yellow-50 p-3 border border-yellow-200">
-                                                <div className="text-sm font-medium text-yellow-700">Remaining Balance</div>
+                                                <div className="text-sm font-medium text-yellow-700">Saldo Restante</div>
                                                 <div className="text-lg font-bold text-yellow-800">
                                                     {formatCurrency(info.remainingBalance)}
                                                 </div>
@@ -274,7 +274,7 @@ export default function StudentPaymentCalendar({
 
                                     {info.payments.length > 0 ? (
                                         <div>
-                                            <div className="text-sm font-medium mb-2">Payment History</div>
+                                            <div className="text-sm font-medium mb-2">Historial de Pagos</div>
                                             <div className="space-y-2">
                                                 {info.payments.map((payment) => (
                                                     <div
@@ -286,7 +286,7 @@ export default function StudentPaymentCalendar({
                                                                 {new Date(payment.paymentDate).toLocaleDateString()}
                                                             </div>
                                                             <div className="text-xs text-muted-foreground">
-                                                                {payment.isPartial ? 'Partial Payment' : 'Full Payment'}
+                                                                {payment.isPartial ? 'Pago Parcial' : 'Pago Completo'}
                                                             </div>
                                                         </div>
                                                         <div className="font-semibold">
@@ -298,7 +298,7 @@ export default function StudentPaymentCalendar({
                                         </div>
                                     ) : (
                                         <div className="text-center py-3 text-muted-foreground text-sm">
-                                            No payments recorded for this month
+                                            No hay pagos registrados para este mes
                                         </div>
                                     )}
                                 </>

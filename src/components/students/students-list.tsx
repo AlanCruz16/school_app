@@ -57,7 +57,7 @@ export default function StudentsList({ students }: StudentsListProps) {
             })
 
             if (!response.ok) {
-                throw new Error('Failed to deactivate student')
+                throw new Error('Error al desactivar estudiante')
             }
 
             router.refresh()
@@ -71,9 +71,9 @@ export default function StudentsList({ students }: StudentsListProps) {
             <Card>
                 <CardContent className="py-10">
                     <div className="text-center">
-                        <p className="text-muted-foreground">No students found</p>
+                        <p className="text-muted-foreground">No se encontraron estudiantes</p>
                         <p className="text-sm text-muted-foreground mt-1">
-                            Try adjusting your filters or add a new student
+                            Intente ajustar sus filtros o agregue un nuevo estudiante
                         </p>
                     </div>
                 </CardContent>
@@ -88,12 +88,12 @@ export default function StudentsList({ students }: StudentsListProps) {
                     <Table>
                         <TableHeader className="sticky top-0 bg-card z-10">
                             <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Grade</TableHead>
+                                <TableHead>Nombre</TableHead>
+                                <TableHead>Grado</TableHead>
                                 <TableHead>Tutor</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Balance</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead>Estado</TableHead>
+                                <TableHead className="text-right">Saldo</TableHead>
+                                <TableHead className="text-right">Acciones</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -113,9 +113,9 @@ export default function StudentsList({ students }: StudentsListProps) {
                                     <TableCell>{student.tutor.name}</TableCell>
                                     <TableCell>
                                         {student.active ? (
-                                            <Badge variant="default">Active</Badge>
+                                            <Badge variant="default">Activo</Badge>
                                         ) : (
-                                            <Badge variant="secondary">Inactive</Badge>
+                                            <Badge variant="secondary">Inactivo</Badge>
                                         )}
                                     </TableCell>
                                     <TableCell className="text-right">
@@ -130,7 +130,7 @@ export default function StudentsList({ students }: StudentsListProps) {
                                             >
                                                 <Link href={`/payments/new?studentId=${student.id}`}>
                                                     <CreditCard className="h-4 w-4" />
-                                                    <span className="sr-only">New Payment</span>
+                                                    <span className="sr-only">Nuevo Pago</span>
                                                 </Link>
                                             </Button>
 
@@ -138,14 +138,14 @@ export default function StudentsList({ students }: StudentsListProps) {
                                                 <DropdownMenuTrigger asChild>
                                                     <Button variant="ghost" size="icon">
                                                         <MoreHorizontal className="h-4 w-4" />
-                                                        <span className="sr-only">More</span>
+                                                        <span className="sr-only">Más</span>
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuItem asChild>
                                                         <Link href={`/students/${student.id}/edit`}>
                                                             <Pencil className="mr-2 h-4 w-4" />
-                                                            Edit
+                                                            Editar
                                                         </Link>
                                                     </DropdownMenuItem>
                                                     {student.active && (
@@ -154,7 +154,7 @@ export default function StudentsList({ students }: StudentsListProps) {
                                                             onClick={() => handleDeactivate(student.id)}
                                                         >
                                                             <XCircle className="mr-2 h-4 w-4" />
-                                                            Deactivate
+                                                            Desactivar
                                                         </DropdownMenuItem>
                                                     )}
                                                 </DropdownMenuContent>
@@ -169,7 +169,7 @@ export default function StudentsList({ students }: StudentsListProps) {
             </CardContent>
             <CardFooter className="py-4">
                 <div className="text-sm text-muted-foreground">
-                    Total: {students.length} students
+                    Total: {students.length} estudiantes
                 </div>
             </CardFooter>
         </Card>

@@ -15,8 +15,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "School Payment Management System",
-  description: "A system for managing student tuition payments",
+  title: "Sistema de Gestión de Pagos Escolares",
+  description: "Un sistema para gestionar los pagos de colegiatura de los estudiantes",
 };
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="es">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

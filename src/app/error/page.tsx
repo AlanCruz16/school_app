@@ -10,27 +10,27 @@ export default function ErrorPage() {
         <div className="flex items-center justify-center min-h-screen bg-background px-4">
             <Card className="w-full max-w-md">
                 <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold text-red-600">Authentication Error</CardTitle>
+                    <CardTitle className="text-2xl font-bold text-red-600">Error de Autenticación</CardTitle>
                     <CardDescription>
-                        There was a problem with your login attempt
+                        Hubo un problema con su intento de inicio de sesión
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
                         <p>
-                            Your login attempt failed. This could be due to:
+                            Su intento de inicio de sesión falló. Esto podría deberse a:
                         </p>
                         <ul className="list-disc list-inside space-y-1">
-                            <li>Incorrect email or password</li>
-                            <li>Your account may be deactivated</li>
-                            <li>You don't have permission to access this system</li>
+                            <li>Correo electrónico o contraseña incorrectos</li>
+                            <li>Su cuenta puede estar desactivada</li>
+                            <li>No tiene permiso para acceder a este sistema</li>
                         </ul>
                     </div>
                 </CardContent>
                 <CardFooter>
                     <Button asChild className="w-full">
                         <Link href="/login">
-                            Try Again
+                            Intentar de Nuevo
                         </Link>
                     </Button>
                 </CardFooter>

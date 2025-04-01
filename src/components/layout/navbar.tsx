@@ -47,13 +47,13 @@ export default function Navbar({ user }: NavbarProps) {
                             </span>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                            <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem asChild>
-                                <Link href="/profile">Profile</Link>
+                                <Link href="/profile">Perfil</Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={handleSignOut}>
-                                Sign Out
+                                Cerrar Sesión
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>

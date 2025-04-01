@@ -69,14 +69,14 @@ export default function PaymentsByMethodReportPage() { // Renamed component
         <div className="container mx-auto p-4 md:p-6">
             <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
                 <Banknote className="h-6 w-6" /> {/* Changed icon */}
-                Last 10 Payments by Method Report {/* Updated title */}
+                Reporte de Últimos 10 Pagos por Método {/* Updated title */}
             </h1>
 
             {loading && (
                 <Card>
                     <CardContent className="flex justify-center items-center py-10">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <span className="ml-2">Loading report data...</span>
+                        <span className="ml-2">Cargando datos del reporte...</span>
                     </CardContent>
                 </Card>
             )}
@@ -84,14 +84,14 @@ export default function PaymentsByMethodReportPage() { // Renamed component
                 <Card>
                     <CardContent className="flex justify-center items-center py-10 text-destructive">
                         <AlertCircle className="h-8 w-8" />
-                        <span className="ml-2">Error loading report: {error}</span>
+                        <span className="ml-2">Error al cargar el reporte: {error}</span>
                     </CardContent>
                 </Card>
             )}
             {noDataFound && (
                 <Card>
                     <CardContent>
-                        <p className="text-center text-muted-foreground py-10">No payment data found for this report.</p>
+                        <p className="text-center text-muted-foreground py-10">No se encontraron datos de pago para este reporte.</p>
                     </CardContent>
                 </Card>
             )}
@@ -110,11 +110,11 @@ export default function PaymentsByMethodReportPage() { // Renamed component
                                     <TableHeader>
                                         <TableRow>
                                             {/* Removed Payment Type/Method column as it's grouped */}
-                                            <TableHead>Student</TableHead>
-                                            <TableHead className="text-right">Amount</TableHead>
-                                            <TableHead>Payment Date</TableHead>
-                                            <TableHead>Description</TableHead>
-                                            <TableHead>Receipt #</TableHead>
+                                            <TableHead>Estudiante</TableHead>
+                                            <TableHead className="text-right">Monto</TableHead>
+                                            <TableHead>Fecha de Pago</TableHead>
+                                            <TableHead>Descripción</TableHead>
+                                            <TableHead>Recibo #</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>

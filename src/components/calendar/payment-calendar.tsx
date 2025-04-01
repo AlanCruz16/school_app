@@ -33,7 +33,7 @@ interface Payment {
     amount: any // Changed to handle Prisma Decimal type
     paymentDate: string | Date
     paymentMethod: string
-    forMonth: number
+    forMonth: number | null // Allow null for backward compatibility or optional payments
     forYear?: number // Optional year field
     isPartial: boolean
     schoolYearId: string
@@ -183,9 +183,9 @@ export default function PaymentCalendar({
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Payment Calendar</CardTitle>
+                <CardTitle>Calendario de Pagos</CardTitle>
                 <CardDescription>
-                    Monthly view of all student payments
+                    Vista mensual de los pagos de todos los estudiantes
                 </CardDescription>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
@@ -196,7 +196,7 @@ export default function PaymentCalendar({
                             onValueChange={setSelectedSchoolYear}
                         >
                             <SelectTrigger>
-                                <SelectValue placeholder="Select School Year" />
+                                <SelectValue placeholder="Seleccionar Año Escolar" />
                             </SelectTrigger>
                             <SelectContent>
                                 {schoolYears.map(year => (
@@ -215,10 +215,10 @@ export default function PaymentCalendar({
                             onValueChange={setSelectedGrade}
                         >
                             <SelectTrigger>
-                                <SelectValue placeholder="All Grades" />
+                                <SelectValue placeholder="Todos los Grados" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all_grades">All Grades</SelectItem>
+                                <SelectItem value="all_grades">Todos los Grados</SelectItem>
                                 {grades
                                     .filter(grade => grade.schoolYearId === selectedSchoolYear)
                                     .map(grade => (
@@ -237,10 +237,10 @@ export default function PaymentCalendar({
                             onValueChange={setSelectedStudent}
                         >
                             <SelectTrigger>
-                                <SelectValue placeholder="All Students" />
+                                <SelectValue placeholder="Todos los Estudiantes" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all_students">All Students</SelectItem>
+                                <SelectItem value="all_students">Todos los Estudiantes</SelectItem>
                                 {filteredStudents.map(student => (
                                     <SelectItem key={student.id} value={student.id}>
                                         {student.name}
@@ -262,7 +262,7 @@ export default function PaymentCalendar({
                             }}
                         >
                             <SelectTrigger>
-                                <SelectValue placeholder="Select Month" />
+                                <SelectValue placeholder="Seleccionar Mes" />
                             </SelectTrigger>
                             <SelectContent>
                                 {allMonthYears.map(monthYear => (
@@ -278,15 +278,15 @@ export default function PaymentCalendar({
                 <div className="flex flex-wrap gap-2 mt-4">
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded bg-green-50 border border-green-200"></div>
-                        <span className="text-sm">Fully Paid</span>
+                        <span className="text-sm">Pagado Completo</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded bg-yellow-50 border border-yellow-200"></div>
-                        <span className="text-sm">Partially Paid</span>
+                        <span className="text-sm">Pagado Parcial</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded bg-gray-50 border border-gray-200"></div>
-                        <span className="text-sm">Unpaid</span>
+                        <span className="text-sm">No Pagado</span>
                     </div>
                 </div>
             </CardHeader>
@@ -294,17 +294,17 @@ export default function PaymentCalendar({
             <CardContent>
                 {!selectedMonthYear ? (
                     <div className="text-center py-8 text-muted-foreground">
-                        Please select a school year and month to view payment status.
+                        Por favor, seleccione un año escolar y un mes para ver el estado de los pagos.
                     </div>
                 ) : (
                     <>
                         <div className="text-lg font-medium mb-4">
-                            {formatMonthYear(selectedMonthYear)} Payment Status
+                            Estado de Pagos de {formatMonthYear(selectedMonthYear)}
                         </div>
 
                         {filteredStudents.length === 0 ? (
                             <div className="text-center py-8 text-muted-foreground">
-                                No students found matching your criteria.
+                                No se encontraron estudiantes que coincidan con sus criterios.
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -322,9 +322,9 @@ export default function PaymentCalendar({
                                     }
 
                                     const statusLabels = {
-                                        paid: 'Paid',
-                                        partial: 'Partial',
-                                        unpaid: 'Unpaid'
+                                        paid: 'Pagado',
+                                        partial: 'Parcial',
+                                        unpaid: 'No Pagado'
                                     }
 
                                     const statusTextColors = {
@@ -369,7 +369,7 @@ export default function PaymentCalendar({
 
                 {/* Month Selector Buttons */}
                 <div className="mt-8">
-                    <div className="text-sm font-medium mb-2">Quick Month Navigation</div>
+                    <div className="text-sm font-medium mb-2">Navegación Rápida de Mes</div>
                     <div className="flex flex-wrap gap-2">
                         {allMonthYears.map((monthYear) => (
                             <Button

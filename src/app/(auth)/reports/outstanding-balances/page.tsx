@@ -32,17 +32,17 @@ export default async function OutstandingBalancesPage() {
                 <Button variant="outline" size="icon" asChild>
                     <Link href="/dashboard">
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">Back to dashboard</span>
+                        <span className="sr-only">Regresar al tablero</span>
                     </Link>
                 </Button>
-                <h1 className="text-3xl font-bold">Outstanding Balances</h1>
+                <h1 className="text-3xl font-bold">Saldos Pendientes</h1>
             </div>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Students with Outstanding Balances</CardTitle>
+                    <CardTitle>Estudiantes con Saldos Pendientes</CardTitle>
                     <CardDescription>
-                        View all students with unpaid balances
+                        Ver todos los estudiantes con saldos no pagados
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
