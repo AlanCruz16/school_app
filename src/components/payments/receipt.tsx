@@ -29,6 +29,9 @@ interface PaymentDetails {
             name: string
             tuitionAmount: any
         }
+        tutor: { // Added tutor object
+            name: string | null // Assuming tutor might be optional or name nullable
+        } | null // Assuming tutor relation might be optional
     }
     schoolYear: {
         name: string
@@ -319,9 +322,10 @@ const Receipt = ({
                             {/* Use the display map, fallback to raw value if not found */}
                             <span>{paymentMethodDisplayMap[payment.paymentMethod] || payment.paymentMethod}</span>
                         </div>
+                        {/* Replaced Payment Type with Tutor */}
                         <div>
-                            <span className="label">Payment Type:</span>
-                            <span>{payment.isPartial ? 'Partial Payment' : 'Full Payment'}</span>
+                            <span className="label">Tutor:</span>
+                            <span>{payment.student.tutor?.name ?? 'N/A'}</span>
                         </div>
 
                         {/* Payment breakdown table for multiple months */}
