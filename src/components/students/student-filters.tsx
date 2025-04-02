@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react' // Import useCallback
 import { Input } from '@/components/ui/input'
 import {
     Select,
@@ -36,17 +36,20 @@ export default function StudentFilters({ grades }: StudentFiltersProps) {
     const [gradeId, setGradeId] = useState(searchParams.get('gradeId') || '__all__')
     const [active, setActive] = useState(searchParams.get('active') || '__all__')
 
-    // Create a debounced function for the search input
-    const debouncedSearch = debounce((value: string) => {
-        const params = new URLSearchParams(searchParams)
-        if (value) {
-            params.set('query', value)
-        } else {
-            params.delete('query')
-        }
-
-        router.push(`${pathname}?${params.toString()}`)
-    }, 300)
+    // Create a debounced function for the search input using useCallback
+    const debouncedSearch = useCallback(
+        debounce((value: string) => {
+            const params = new URLSearchParams(searchParams)
+            if (value) {
+                params.set('query', value)
+            } else {
+                params.delete('query')
+            }
+            // console.log('Navigating to:', `${pathname}?${params.toString()}`); // Debug log removed
+            router.push(`${pathname}?${params.toString()}`)
+        }, 300),
+        [pathname, router, searchParams] // Dependencies for useCallback
+    );
 
     // Update filters
     const updateFilters = () => {
@@ -98,8 +101,10 @@ export default function StudentFilters({ grades }: StudentFiltersProps) {
                             className="pl-8"
                             value={query}
                             onChange={(e) => {
-                                setQuery(e.target.value)
-                                debouncedSearch(e.target.value)
+                                const value = e.target.value;
+                                // console.log('Input onChange triggered:', e.target.value); // Debug log removed
+                                setQuery(value);
+                                debouncedSearch(value); // Re-enabled debounced search
                             }}
                         />
                     </div>
