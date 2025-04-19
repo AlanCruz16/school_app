@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Grade" ADD COLUMN     "order" INTEGER NOT NULL DEFAULT 99;

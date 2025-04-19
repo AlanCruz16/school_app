@@ -14,7 +14,7 @@ export function formatCurrency(amount: number): string {
  */
 export function formatDate(date: Date | string): string {
     const d = typeof date === 'string' ? new Date(date) : date
-    return d.toLocaleDateString('en-US', {
+    return d.toLocaleDateString('es-MX', { // Changed locale to es-MX
         year: 'numeric',
         month: 'short',
         day: 'numeric'
@@ -26,7 +26,7 @@ export function formatDate(date: Date | string): string {
  */
 export function formatMonth(month: number): string {
     const date = new Date(2000, month - 1, 1)
-    return date.toLocaleDateString('en-US', { month: 'long' })
+    return date.toLocaleDateString('es-MX', { month: 'long' }) // Changed locale to es-MX
 }
 
 // Import PaymentMethod enum

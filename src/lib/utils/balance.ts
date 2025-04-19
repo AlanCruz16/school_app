@@ -208,9 +208,9 @@ export function getMonthsToPay(schoolYear: SchoolYearParam): MonthYearPair[] {
 /**
  * Format a month-year pair for display
  */
-export function formatMonthYear(monthYear: MonthYearPair): string {
+export function getMonthName(monthYear: { month: number; year: number }): string {
     const date = new Date(monthYear.year, monthYear.month - 1, 1);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString('es-MX', { // Changed locale to es-MX
         month: 'long',
         year: 'numeric'
     });

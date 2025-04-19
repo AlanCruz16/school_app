@@ -40,7 +40,7 @@ export default async function EditStudentPage({
                 }
             },
             {
-                name: 'asc'
+                order: 'asc' // Sort by numerical order instead of name
             }
         ]
     })

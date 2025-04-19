@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { formatCurrency, formatMonth } from '@/lib/utils/format'
 import { cn } from '@/lib/utils/utils'
 import { ChevronRight } from 'lucide-react'
-import { getAllSchoolYearMonths, formatMonthYear, type MonthYearPair } from '@/lib/utils/balance'
+import { getAllSchoolYearMonths, getMonthName, type MonthYearPair } from '@/lib/utils/balance' // Renamed import
 
 interface Payment {
     id: string
@@ -121,9 +121,9 @@ export default function PaymentSummary({
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Resumen de Pagos - {formatMonthYear(selectedMonthYear)}</CardTitle>
+                <CardTitle>Resumen de Pagos - {getMonthName(selectedMonthYear)}</CardTitle> {/* Changed function name */}
                 <CardDescription>
-                    Resumen del estado de pagos para {formatMonthYear(selectedMonthYear)}
+                    Resumen del estado de pagos para {getMonthName(selectedMonthYear)} {/* Changed function name */}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -181,7 +181,7 @@ export default function PaymentSummary({
 
                 {paymentsForMonthYear.length === 0 ? (
                     <div className="text-center py-4 text-muted-foreground">
-                        No hay pagos registrados para {formatMonthYear(selectedMonthYear)}
+                        No hay pagos registrados para {getMonthName(selectedMonthYear)} {/* Changed function name */}
                     </div>
                 ) : (
                     <div className="space-y-3 max-h-64 overflow-y-auto pr-2">

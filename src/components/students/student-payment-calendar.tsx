@@ -10,7 +10,7 @@ import { CreditCard, ArrowRight } from 'lucide-react'
 import {
     getUnpaidMonths,
     getAllSchoolYearMonths,
-    formatMonthYear,
+    getMonthName, // Renamed from formatMonthYear
     type MonthYearPair
 } from '@/lib/utils/balance'
 
@@ -214,7 +214,7 @@ export default function StudentPaymentCalendar({
                 <div className="mt-6">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold">
-                            Detalles de {formatMonthYear(selectedMonthYear)}
+                            Detalles de {getMonthName(selectedMonthYear)} {/* Changed function name */}
                         </h3>
 
                         {/* Find the payment info for this month */}
@@ -286,7 +286,7 @@ export default function StudentPaymentCalendar({
                                                                 {new Date(payment.paymentDate).toLocaleDateString()}
                                                             </div>
                                                             <div className="text-xs text-muted-foreground">
-                                                                {payment.isPartial ? 'Pago Parcial' : 'Pago Completo'}
+                                                                {new Date(payment.paymentDate).toLocaleDateString('es-MX')} {/* Changed locale to es-MX */}
                                                             </div>
                                                         </div>
                                                         <div className="font-semibold">

@@ -26,6 +26,7 @@ model Grade {
   name            String
   tuitionAmount   Decimal    @db.Decimal(10, 2)
   inscriptionCost Decimal    @db.Decimal(10, 2) @default(500.00) // Added inscription cost
+  order           Int        @default(99) // Added order field for sorting
   schoolYearId    String
   createdAt       DateTime   @default(now())
   updatedAt     DateTime   @updatedAt

@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button'
 import { formatCurrency, formatMonth } from '@/lib/utils/format'
 import { cn } from '@/lib/utils/utils'
 import Link from 'next/link'
-import { getAllSchoolYearMonths, formatMonthYear, type MonthYearPair } from '@/lib/utils/balance'
+import { getAllSchoolYearMonths, getMonthName, type MonthYearPair } from '@/lib/utils/balance' // Renamed import
 
 interface Student {
     id: string
@@ -267,7 +267,7 @@ export default function PaymentCalendar({
                             <SelectContent>
                                 {allMonthYears.map(monthYear => (
                                     <SelectItem key={monthYear.key} value={monthYear.key}>
-                                        {formatMonthYear(monthYear)}
+                                        {getMonthName(monthYear)} {/* Changed function name */}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -299,7 +299,7 @@ export default function PaymentCalendar({
                 ) : (
                     <>
                         <div className="text-lg font-medium mb-4">
-                            Estado de Pagos de {formatMonthYear(selectedMonthYear)}
+                            Estado de Pagos de {getMonthName(selectedMonthYear)} {/* Changed function name */}
                         </div>
 
                         {filteredStudents.length === 0 ? (

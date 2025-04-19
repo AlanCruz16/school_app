@@ -26,7 +26,7 @@ export default async function NewStudentPage() {
                 }
             },
             {
-                name: 'asc'
+                order: 'asc' // Sort by numerical order instead of name
             }
         ]
     })

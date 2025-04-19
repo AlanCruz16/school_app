@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
                 },
             },
             orderBy: {
-                name: 'asc',
+                order: 'asc', // Sort by the new order field
             },
         })
 

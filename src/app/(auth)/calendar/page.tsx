@@ -41,7 +41,10 @@ async function CalendarContent() {
     const grades = await prisma.grade.findMany({
         include: {
             schoolYear: true
-        }
+        },
+        orderBy: {
+            order: 'asc', // Ensure grades are sorted numerically
+        },
     })
 
     // Get all active students

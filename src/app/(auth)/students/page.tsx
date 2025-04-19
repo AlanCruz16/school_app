@@ -72,7 +72,7 @@ async function StudentsContent({
                 }
             },
             {
-                name: 'asc'
+                order: 'asc' // Sort by numerical order instead of name
             }
         ]
     })

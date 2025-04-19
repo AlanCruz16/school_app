@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/card'
 import { useToast } from '@/components/ui/use-toast'
 import { formatCurrency, formatMonth } from '@/lib/utils/format'
-import { getAllSchoolYearMonths, formatMonthYear } from '@/lib/utils/balance'
+import { getAllSchoolYearMonths, getMonthName } from '@/lib/utils/balance' // Renamed import
 import { Check, AlertCircle, Calendar } from 'lucide-react'
 import { distributePayment } from '@/lib/utils/balance'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -739,14 +739,14 @@ export default function PaymentForm({
                         <h3 className="font-semibold">Vista Previa del Recibo</h3>
                         <div className="mt-2 space-y-1 text-sm">
                             <div className="grid grid-cols-2"><span className="text-muted-foreground">Estudiante:</span><span>{student.name}</span></div>
-                            <div className="grid grid-cols-2"><span className="text-muted-foreground">Fecha:</span><span>{new Date().toLocaleDateString()}</span></div>
+                            <div className="grid grid-cols-2"><span className="text-muted-foreground">Fecha:</span><span>{new Date().toLocaleDateString('es-MX')}</span></div> {/* Changed locale to es-MX */}
                             <div className="grid grid-cols-2"><span className="text-muted-foreground">Monto:</span><span>{formatCurrency(parseFloat(amount) || 0)}</span></div>
                             <div className="grid grid-cols-2">
                                 <span className="text-muted-foreground">Concepto:</span>
                                 <span>
                                     {paymentType === PaymentType.TUITION
                                         ? (selectedMonthsData.length
-                                            ? (selectedMonthsData.length > 1 ? `Colegiatura - Varios meses (${selectedMonthsData.length})` : `Colegiatura - ${formatMonthYear(selectedMonthsData[0])}`)
+                                            ? (selectedMonthsData.length > 1 ? `Colegiatura - Varios meses (${selectedMonthsData.length})` : `Colegiatura - ${getMonthName(selectedMonthsData[0])}`) // Changed function name
                                             : (paymentMode === 'bulk' ? 'Colegiatura - Pago Masivo' : 'Colegiatura'))
                                         : (paymentType === PaymentType.INSCRIPTION ? 'Cuota de Inscripción' : (description || 'Pago Opcional'))
                                     }
