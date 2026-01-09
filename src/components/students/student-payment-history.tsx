@@ -129,7 +129,7 @@ export default function StudentPaymentHistory({ payments }: StudentPaymentHistor
                         <TableRow>
                             <TableHead>Fecha</TableHead>
                             <TableHead>Recibo No.</TableHead>
-                            <TableHead>Concepto</TableHead> {/* Changed Header */}
+                            <TableHead>Concepto</TableHead>
                             <TableHead>Año Escolar</TableHead>
                             <TableHead>Método</TableHead>
                             <TableHead>Estado</TableHead>

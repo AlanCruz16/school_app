@@ -6,6 +6,7 @@ import { createClient } from '@/lib/utils/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import OutstandingBalances from '@/components/dashboard/outstanding-balances'
+import { serializeDecimal } from '@/lib/utils/convert-decimal'
 
 export default async function OutstandingBalancesPage() {
     const supabase = await createClient()
@@ -46,7 +47,7 @@ export default async function OutstandingBalancesPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <OutstandingBalances students={students} />
+                    <OutstandingBalances students={serializeDecimal(students)} />
                 </CardContent>
             </Card>
         </div>

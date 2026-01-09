@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { formatCurrency, formatDate, formatMonth } from '@/lib/utils/format'
 import { calculateExpectedBalance } from '@/lib/utils/balance' // Add this import
+import { serializeDecimal } from '@/lib/utils/convert-decimal'
 import StudentPaymentHistory from '@/components/students/student-payment-history'
 import StudentPaymentCalendar from '@/components/students/student-payment-calendar'
 import StudentDetailSkeleton from '@/components/skeletons/student-detail-skeleton'
@@ -217,11 +218,11 @@ async function StudentDetailContent({
                     </CardHeader>
                     <CardContent>
                         <StudentPaymentCalendar
-                            payments={student.payments}
+                            payments={serializeDecimal(student.payments)}
                             schoolYearId={activeSchoolYear.id}
                             monthlyFee={parseFloat(student.grade.tuitionAmount.toString())}
                             studentId={student.id}
-                            student={student} // Pass student object
+                            student={serializeDecimal(student)} // Pass student object
                             activeSchoolYear={activeSchoolYear} // Pass active school year
                         />
                     </CardContent>
@@ -237,21 +238,22 @@ async function StudentDetailContent({
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <StudentPaymentHistory payments={student.payments} />
+                    <StudentPaymentHistory payments={serializeDecimal(student.payments)} />
                 </CardContent>
             </Card>
         </div>
     )
 }
 
-export default function StudentDetailPage({
+export default async function StudentDetailPage({
     params
 }: {
-    params: { id: string }
+    params: Promise<{ id: string }>
 }) {
+    const resolvedParams = await params
     return (
         <Suspense fallback={<StudentDetailSkeleton />}>
-            <StudentDetailContent params={params} />
+            <StudentDetailContent params={resolvedParams} />
         </Suspense>
     )
 }

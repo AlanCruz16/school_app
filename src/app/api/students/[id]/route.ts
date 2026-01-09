@@ -6,7 +6,7 @@ import { createClient } from '@/lib/utils/supabase/server'
 // GET /api/students/[id] - Get a student by ID
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const supabase = await createClient()
@@ -19,7 +19,7 @@ export async function GET(
             })
         }
 
-        const { id } = params
+        const { id } = await params
 
         const student = await prisma.student.findUnique({
             where: { id },
@@ -58,7 +58,7 @@ export async function GET(
 // PUT /api/students/[id] - Update a student
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const supabase = await createClient()
@@ -71,7 +71,7 @@ export async function PUT(
             })
         }
 
-        const { id } = params
+        const { id } = await params
         const data = await request.json()
 
         // Check if the student exists
@@ -115,7 +115,7 @@ export async function PUT(
 // DELETE /api/students/[id] - Delete a student
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const supabase = await createClient()
@@ -128,7 +128,7 @@ export async function DELETE(
             })
         }
 
-        const { id } = params
+        const { id } = await params
 
         // Check if student has payments before deletion
         const studentWithPayments = await prisma.student.findUnique({

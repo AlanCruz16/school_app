@@ -20,6 +20,7 @@ import TutorStudentsList from '@/components/tutors/tutor-students-list'
 import DeleteTutorButton from '@/components/tutors/delete-tutor-button'
 import TutorDetailSkeleton from '@/components/skeletons/tutor-detail-skeleton'
 import { SuspenseWrapper } from '@/lib/utils/suspense-wrapper'
+import { serializeDecimal } from '@/lib/utils/convert-decimal'
 
 // This component fetches and displays the actual tutor details
 async function TutorDetailContent({
@@ -167,22 +168,23 @@ async function TutorDetailContent({
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <TutorStudentsList students={tutor.students} />
+                    <TutorStudentsList students={serializeDecimal(tutor.students)} />
                 </CardContent>
             </Card>
         </div>
     )
 }
 
-export default function TutorDetailPage({
+export default async function TutorDetailPage({
     params
 }: {
-    params: { id: string }
+    params: Promise<{ id: string }>
 }) {
+    const resolvedParams = await params
     return (
         <Suspense fallback={<TutorDetailSkeleton />}>
             <SuspenseWrapper>
-                <TutorDetailContent params={params} />
+                <TutorDetailContent params={resolvedParams} />
             </SuspenseWrapper>
         </Suspense>
     )

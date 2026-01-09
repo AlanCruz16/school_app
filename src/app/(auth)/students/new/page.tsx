@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { createClient } from '@/lib/utils/supabase/server'
 import { Button } from '@/components/ui/button'
 import StudentForm from '@/components/students/student-form'
+import { serializeDecimal } from '@/lib/utils/convert-decimal'
 
 export default async function NewStudentPage() {
     const supabase = await createClient()
@@ -50,8 +51,8 @@ export default async function NewStudentPage() {
             </div>
 
             <StudentForm
-                grades={grades}
-                tutors={tutors}
+                grades={serializeDecimal(grades)}
+                tutors={serializeDecimal(tutors)}
             />
         </div>
     )

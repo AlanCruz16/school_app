@@ -6,7 +6,7 @@ import { createClient } from '@/lib/utils/supabase/server'
 // GET /api/tutors/[id] - Get a tutor by ID
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const supabase = await createClient()
@@ -19,7 +19,7 @@ export async function GET(
             })
         }
 
-        const { id } = params
+        const { id } = await params
 
         const tutor = await prisma.tutor.findUnique({
             where: { id },
@@ -55,7 +55,7 @@ export async function GET(
 // PUT /api/tutors/[id] - Update a tutor
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const supabase = await createClient()
@@ -68,7 +68,7 @@ export async function PUT(
             })
         }
 
-        const { id } = params
+        const { id } = await params
         const data = await request.json()
 
         // Check if the tutor exists
@@ -107,7 +107,7 @@ export async function PUT(
 // DELETE /api/tutors/[id] - Delete a tutor
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const supabase = await createClient()
@@ -120,7 +120,7 @@ export async function DELETE(
             })
         }
 
-        const { id } = params
+        const { id } = await params
 
         // Check if tutor has students
         const tutorWithStudents = await prisma.tutor.findUnique({

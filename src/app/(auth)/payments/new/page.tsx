@@ -7,11 +7,12 @@ import { createClient } from '@/lib/utils/supabase/server'
 import { Button } from '@/components/ui/button'
 import PaymentForm from '@/components/payments/payment-form'
 import StudentSelector from '@/components/payments/student-selector'
+import { serializeDecimal } from '@/lib/utils/convert-decimal'
 
 export default async function NewPaymentPage({
     searchParams
 }: {
-    searchParams: { studentId?: string, month?: string, year?: string }
+    searchParams: Promise<{ studentId?: string, month?: string, year?: string }>
 }) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -19,6 +20,8 @@ export default async function NewPaymentPage({
     if (!user) {
         return null // Will be handled by middleware
     }
+
+    const { studentId, month, year } = await searchParams
 
     // Get or create the clerk information
     let clerk = await prisma.user.findUnique({
@@ -79,12 +82,9 @@ export default async function NewPaymentPage({
         )
     }
 
-    // Check if a student ID was provided
-    const studentId = searchParams.studentId
-
     // Parse month and year parameters if provided
-    const initialMonth = searchParams.month ? parseInt(searchParams.month) : undefined
-    const initialYear = searchParams.year ? parseInt(searchParams.year) : undefined
+    const initialMonth = month ? parseInt(month) : undefined
+    const initialYear = year ? parseInt(year) : undefined
 
     // If no student ID is provided, show student selector
     if (!studentId) {
@@ -177,13 +177,13 @@ export default async function NewPaymentPage({
             </div>
 
             <PaymentForm
-                student={student}
+                student={serializeDecimal(student)}
                 clerkId={clerk.id}
                 clerkName={clerk.name}
                 activeSchoolYear={activeSchoolYear}
                 initialMonth={initialMonth}
                 initialYear={initialYear}
-                studentPayments={studentPayments} // Pass fetched payments
+                studentPayments={serializeDecimal(studentPayments)} // Pass fetched payments
             />
         </div>
     )

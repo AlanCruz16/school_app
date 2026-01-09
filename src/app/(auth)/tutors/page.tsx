@@ -9,12 +9,13 @@ import TutorsListSkeleton from '@/components/skeletons/tutors-list-skeleton'
 import { SuspenseWrapper } from '@/lib/utils/suspense-wrapper'
 import Link from 'next/link'
 import { PlusCircle } from 'lucide-react'
+import { serializeDecimal } from '@/lib/utils/convert-decimal'
 
 // This component fetches and displays the actual tutors list
 async function TutorsContent({
     searchParams
 }: {
-    searchParams: { query?: string }
+    searchParams: Promise<{ query?: string }>
 }) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -23,8 +24,10 @@ async function TutorsContent({
         return null // Will be handled by middleware
     }
 
+    const { query: searchQuery } = await searchParams
+
     // Get search query from URL params
-    const query = searchParams.query || ''
+    const query = searchQuery || ''
 
     // Build filters for prisma
     const filters: any = {}
@@ -69,15 +72,15 @@ async function TutorsContent({
 
             <TutorSearch />
 
-            <TutorsList tutors={tutors} />
+            <TutorsList tutors={serializeDecimal(tutors)} />
         </div>
     )
 }
 
-export default function TutorsPage({
+export default async function TutorsPage({
     searchParams
 }: {
-    searchParams: { query?: string }
+    searchParams: Promise<{ query?: string }>
 }) {
     return (
         <Suspense fallback={<TutorsListSkeleton />}>

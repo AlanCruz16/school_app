@@ -7,9 +7,10 @@ import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import Receipt from '@/components/payments/receipt'
 import PrintButton from '@/components/payments/print-button'
+import { serializeDecimal } from '@/lib/utils/convert-decimal'
 
 interface ReceiptPageProps {
-    params: { id: string }
+    params: Promise<{ id: string }>
 }
 
 export default async function ReceiptPage({ params }: ReceiptPageProps) {
@@ -20,9 +21,11 @@ export default async function ReceiptPage({ params }: ReceiptPageProps) {
         return null // Will be handled by middleware
     }
 
+    const { id } = await params
+
     // Fetch the payment with detailed information
     const payment = await prisma.payment.findUnique({
-        where: { id: params.id },
+        where: { id },
         include: {
             student: {
                 include: {
@@ -83,7 +86,7 @@ export default async function ReceiptPage({ params }: ReceiptPageProps) {
             </div>
 
             <Receipt
-                payment={enhancedPayment}
+                payment={serializeDecimal(enhancedPayment)}
                 schoolName="Sistema de Pago Escolar"
                 schoolAddress="Calle Educación 123, Ciudad Aprendizaje"
                 schoolPhone="(123) 456-7890"

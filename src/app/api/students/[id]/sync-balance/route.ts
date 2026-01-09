@@ -6,7 +6,7 @@ import { calculateExpectedBalance } from '@/lib/utils/balance'
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const supabase = await createClient()
@@ -19,7 +19,7 @@ export async function POST(
             })
         }
 
-        const { id } = params
+        const { id } = await params
 
         // Get the student with grade info
         const student = await prisma.student.findUnique({

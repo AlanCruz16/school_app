@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { createClient } from '@/lib/utils/supabase/server'
 import PaymentCalendar from '@/components/calendar/payment-calendar'
 import CalendarPageSkeleton from '@/components/skeletons/calendar-page-skeleton'
+import { serializeDecimal } from '@/lib/utils/convert-decimal'
 
 // This component fetches and displays the actual calendar data
 async function CalendarContent() {
@@ -79,9 +80,9 @@ async function CalendarContent() {
             </p>
 
             <PaymentCalendar
-                payments={payments}
-                students={students}
-                grades={grades}
+                payments={serializeDecimal(payments)}
+                students={serializeDecimal(students)}
+                grades={serializeDecimal(grades)}
                 schoolYears={schoolYears}
                 currentSchoolYearId={activeSchoolYear.id}
             />

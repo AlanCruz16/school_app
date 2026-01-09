@@ -6,11 +6,12 @@ import { prisma } from '@/lib/db'
 import { createClient } from '@/lib/utils/supabase/server'
 import { Button } from '@/components/ui/button'
 import TutorForm from '@/components/tutors/tutor-form'
+import { serializeDecimal } from '@/lib/utils/convert-decimal'
 
 export default async function EditTutorPage({
     params
 }: {
-    params: { id: string }
+    params: Promise<{ id: string }>
 }) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -19,9 +20,11 @@ export default async function EditTutorPage({
         return null // Will be handled by middleware
     }
 
+    const { id } = await params
+
     // Fetch the tutor data
     const tutor = await prisma.tutor.findUnique({
-        where: { id: params.id }
+        where: { id }
     })
 
     if (!tutor) {
@@ -41,7 +44,7 @@ export default async function EditTutorPage({
             </div>
 
             <TutorForm
-                tutor={tutor}
+                tutor={serializeDecimal(tutor)}
                 isEditing={true}
             />
         </div>

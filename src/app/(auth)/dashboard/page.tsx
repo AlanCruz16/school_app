@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/utils/supabase/server'
 import { prisma } from '@/lib/db'
 import { formatCurrency } from '@/lib/utils/format'
+import { serializeDecimal } from '@/lib/utils/convert-decimal'
 import PaymentSummary from '@/components/dashboard/payment-summary'
 import DashboardSkeleton from '@/components/skeletons/dashboard-skeleton'
 
@@ -174,7 +175,7 @@ async function DashboardContent() {
 
             <div className="grid gap-6 md:grid-cols-2">
                 <PaymentSummary
-                    payments={allPaymentsForSummary} // Use the separate fetch for this component
+                    payments={serializeDecimal(allPaymentsForSummary)} // Use the separate fetch for this component
                     totalStudents={totalStudents}
                     currentMonth={currentMonthForSummary} // Use 1-indexed month
                     activeSchoolYear={activeSchoolYear || undefined}

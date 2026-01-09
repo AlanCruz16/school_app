@@ -8,12 +8,13 @@ import StudentFilters from '@/components/students/student-filters'
 import StudentListSkeleton from '@/components/skeletons/student-list-skeleton'
 import Link from 'next/link'
 import { PlusCircle } from 'lucide-react'
+import { serializeDecimal } from '@/lib/utils/convert-decimal'
 
 // This component fetches and displays the actual student list content
 async function StudentsContent({
     searchParams
 }: {
-    searchParams: { query?: string; gradeId?: string; active?: string }
+    searchParams: Promise<{ query?: string; gradeId?: string; active?: string }>
 }) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -22,10 +23,12 @@ async function StudentsContent({
         return null // Will be handled by middleware
     }
 
+    const { query: searchQuery, active: activeParam, gradeId: gradeIdParam } = await searchParams
+
     // Get filters from search params
-    const query = searchParams.query || ''
-    const active = searchParams.active !== undefined ? searchParams.active === 'true' : undefined
-    const gradeId = searchParams.gradeId || undefined
+    const query = searchQuery || ''
+    const active = activeParam !== undefined ? activeParam === 'true' : undefined
+    const gradeId = gradeIdParam || undefined
 
     // Build filters for prisma
     const filters: any = {}
@@ -94,17 +97,17 @@ async function StudentsContent({
                 </Button>
             </div>
 
-            <StudentFilters grades={grades} />
+            <StudentFilters grades={serializeDecimal(grades)} />
 
-            <StudentsList students={students} />
+            <StudentsList students={serializeDecimal(students)} />
         </div>
     )
 }
 
-export default function StudentsPage({
+export default async function StudentsPage({
     searchParams
 }: {
-    searchParams: { query?: string; gradeId?: string; active?: string }
+    searchParams: Promise<{ query?: string; gradeId?: string; active?: string }>
 }) {
     return (
         <Suspense fallback={<StudentListSkeleton />}>
